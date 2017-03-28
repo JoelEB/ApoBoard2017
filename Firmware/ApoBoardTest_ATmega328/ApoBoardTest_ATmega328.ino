@@ -1,7 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 
-#define BUTTON_PIN 2
-#define LED_PIN 4
+#define BUTTON_PIN 10
+#define LED_PIN 9
 #define NUMofLEDs 5
 #define IR_RECEIVE 11
 //IR Send is hardcoded in the IRremote library to pin 3
