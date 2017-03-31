@@ -1,8 +1,8 @@
 #include <Adafruit_NeoPixel.h>
 
-#define BUTTON_PIN 10
-#define LED_PIN 9
-#define NUMofLEDs 5
+#define BUTTON_PIN 9
+#define LED_PIN 10
+#define NUMofLEDs 10
 #define IR_RECEIVE 11
 //IR Send is hardcoded in the IRremote library to pin 3
 
@@ -40,23 +40,23 @@ void setup()
 void loop() 
 {  
   // Some example procedures showing how to display to the pixels:
-  //colorWipe(strip.Color(255, 0, 0), 50); // Red
-  //colorWipe(strip.Color(0, 255, 0), 50); // Green
-  //colorWipe(strip.Color(0, 0, 255), 50); // Blue
+  colorWipe(strip.Color(255, 0, 0), 50); // Red
+  colorWipe(strip.Color(0, 255, 0), 50); // Green
+  colorWipe(strip.Color(0, 0, 255), 50); // Blue
   // Send a theater pixel chase in...
-  //theaterChase(strip.Color(127, 127, 127), 50); // White
-  //theaterChase(strip.Color(127,   0,   0), 50); // Red
-  //theaterChase(strip.Color(  0,   0, 127), 50); // Blue
+  theaterChase(strip.Color(127, 127, 127), 50); // White
+  theaterChase(strip.Color(127,   0,   0), 50); // Red
+  theaterChase(strip.Color(  0,   0, 127), 50); // Blue
 
-  //rainbow(20);
-  //rainbowCycle(20);
- // theaterChaseRainbow(50);
+  rainbow(20);
+  rainbowCycle(20);
+  theaterChaseRainbow(50);
+  //for(int i = 0;i++;i
+  flashRandom(5, 1);  // first number is 'wait' delay, shorter num == shorter twinkle
+  flashRandom(5, 3);  // second number is how many neopixels to simultaneously light up
+  flashRandom(5, 2);
 
-//flashRandom(5, 1);  // first number is 'wait' delay, shorter num == shorter twinkle
-//flashRandom(5, 3);  // second number is how many neopixels to simultaneously light up
-//flashRandom(5, 2);
-
-
+/*
  if(!digitalRead(BUTTON_PIN))
  {
   colorMode++;
@@ -67,6 +67,7 @@ void loop()
   delay(150);
  }
  checkColorMode();
+ */
 }
 ///////////////////////////////////////
 void checkColorMode()

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.3.0">
+<eagle version="7.6.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -7507,6 +7507,7 @@ We've spent an enormous amount of time creating and checking these footprints an
 <part name="TP5" library="SparkFun-Passives" deviceset="TEST-POINT" device="3X5" value="TP-3x5"/>
 <part name="TP6" library="SparkFun-Passives" deviceset="TEST-POINT" device="3X5" value="TP-3x5"/>
 <part name="P+18" library="supply1" deviceset="+5V" device=""/>
+<part name="BAT2" library="SparkFun" deviceset="BATTERY" device="AA-KIT" value="AA"/>
 </parts>
 <sheets>
 <sheet>
@@ -7578,9 +7579,9 @@ We've spent an enormous amount of time creating and checking these footprints an
 </instance>
 <instance part="GND38" gate="1" x="50.8" y="15.24"/>
 <instance part="P+1" gate="1" x="50.8" y="83.82"/>
-<instance part="GND22" gate="1" x="63.5" y="99.06" rot="MR0"/>
+<instance part="GND22" gate="1" x="35.56" y="111.76" rot="MR0"/>
 <instance part="S1" gate="1" x="68.58" y="116.84" rot="MR180"/>
-<instance part="BAT1" gate="G$1" x="63.5" y="109.22" rot="R270"/>
+<instance part="BAT1" gate="G$1" x="43.18" y="116.84" rot="R180"/>
 <instance part="JP3" gate="G$1" x="91.44" y="121.92" rot="R180"/>
 <instance part="GND7" gate="1" x="83.82" y="114.3" rot="MR0"/>
 <instance part="P+16" gate="1" x="81.28" y="127"/>
@@ -7613,6 +7614,7 @@ We've spent an enormous amount of time creating and checking these footprints an
 <attribute name="NAME" x="214.376" y="100.838" size="1.778" layer="95"/>
 </instance>
 <instance part="P+18" gate="1" x="226.06" y="111.76"/>
+<instance part="BAT2" gate="G$1" x="55.88" y="116.84" rot="R180"/>
 </instances>
 <busses>
 </busses>
@@ -7733,11 +7735,6 @@ We've spent an enormous amount of time creating and checking these footprints an
 <pinref part="U13" gate="G$1" pin="GND@1"/>
 </segment>
 <segment>
-<wire x1="63.5" y1="101.6" x2="63.5" y2="104.14" width="0.1524" layer="91"/>
-<pinref part="GND22" gate="1" pin="GND"/>
-<pinref part="BAT1" gate="G$1" pin="-"/>
-</segment>
-<segment>
 <pinref part="C1" gate="G$1" pin="1"/>
 <pinref part="GND9" gate="1" pin="GND"/>
 <wire x1="20.32" y1="48.26" x2="20.32" y2="50.8" width="0.1524" layer="91"/>
@@ -7752,6 +7749,12 @@ We've spent an enormous amount of time creating and checking these footprints an
 <pinref part="JP3" gate="G$1" pin="1"/>
 <wire x1="83.82" y1="124.46" x2="83.82" y2="116.84" width="0.1524" layer="91"/>
 <pinref part="GND7" gate="1" pin="GND"/>
+</segment>
+<segment>
+<pinref part="BAT1" gate="G$1" pin="-"/>
+<pinref part="GND22" gate="1" pin="GND"/>
+<wire x1="38.1" y1="116.84" x2="35.56" y2="116.84" width="0.1524" layer="91"/>
+<wire x1="35.56" y1="116.84" x2="35.56" y2="114.3" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="MOSI" class="0">
@@ -8181,14 +8184,6 @@ We've spent an enormous amount of time creating and checking these footprints an
 <pinref part="U13" gate="G$1" pin="PB6(XTAL1/TOSC1)"/>
 </segment>
 </net>
-<net name="N$7" class="0">
-<segment>
-<wire x1="63.5" y1="114.3" x2="63.5" y2="116.84" width="0.1524" layer="91"/>
-<wire x1="63.5" y1="116.84" x2="66.04" y2="116.84" width="0.1524" layer="91"/>
-<pinref part="S1" gate="1" pin="P"/>
-<pinref part="BAT1" gate="G$1" pin="+"/>
-</segment>
-</net>
 <net name="N$4" class="0">
 <segment>
 <pinref part="U13" gate="G$1" pin="PD2(INT0)"/>
@@ -8201,6 +8196,20 @@ We've spent an enormous amount of time creating and checking these footprints an
 <pinref part="JP3" gate="G$1" pin="3"/>
 <pinref part="S1" gate="1" pin="S"/>
 <wire x1="83.82" y1="119.38" x2="73.66" y2="119.38" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$7" class="0">
+<segment>
+<pinref part="S1" gate="1" pin="P"/>
+<pinref part="BAT2" gate="G$1" pin="+"/>
+<wire x1="60.96" y1="116.84" x2="66.04" y2="116.84" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$10" class="0">
+<segment>
+<pinref part="BAT2" gate="G$1" pin="-"/>
+<pinref part="BAT1" gate="G$1" pin="+"/>
+<wire x1="48.26" y1="116.84" x2="50.8" y2="116.84" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
