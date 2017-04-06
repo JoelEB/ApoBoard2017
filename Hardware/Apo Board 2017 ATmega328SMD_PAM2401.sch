@@ -9008,11 +9008,6 @@ PAM2401 </text>
 </net>
 <net name="BUTTON" class="0">
 <segment>
-<wire x1="91.44" y1="15.24" x2="109.22" y2="15.24" width="0.1524" layer="91"/>
-<label x="109.22" y="15.24" size="1.27" layer="95" xref="yes"/>
-<pinref part="U13" gate="G$1" pin="PB2(SS/OC1B)"/>
-</segment>
-<segment>
 <pinref part="S2" gate="S" pin="1"/>
 <wire x1="167.64" y1="104.14" x2="165.1" y2="104.14" width="0.1524" layer="91"/>
 <pinref part="S2" gate="S" pin="2"/>
@@ -9021,6 +9016,11 @@ PAM2401 </text>
 <wire x1="165.1" y1="104.14" x2="162.56" y2="104.14" width="0.1524" layer="91"/>
 <junction x="165.1" y="104.14"/>
 <label x="162.56" y="104.14" size="1.27" layer="95" rot="R180" xref="yes"/>
+</segment>
+<segment>
+<pinref part="U13" gate="G$1" pin="PD2(INT0)"/>
+<wire x1="91.44" y1="38.1" x2="106.68" y2="38.1" width="0.1524" layer="91"/>
+<label x="106.68" y="38.1" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="N$22" class="0">
@@ -9135,27 +9135,27 @@ PAM2401 </text>
 </net>
 <net name="IR_TX" class="0">
 <segment>
-<pinref part="U13" gate="G$1" pin="PB0(ICP)"/>
-<wire x1="91.44" y1="20.32" x2="93.98" y2="20.32" width="0.1524" layer="91"/>
-<label x="93.98" y="20.32" size="1.27" layer="95" xref="yes"/>
-</segment>
-<segment>
 <pinref part="R1" gate="G$1" pin="1"/>
 <wire x1="236.22" y1="121.92" x2="236.22" y2="124.46" width="0.1524" layer="91"/>
 <wire x1="236.22" y1="124.46" x2="233.68" y2="124.46" width="0.1524" layer="91"/>
 <label x="233.68" y="124.46" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
-</net>
-<net name="IR_RX" class="0">
 <segment>
 <pinref part="U13" gate="G$1" pin="PB1(OC1A)"/>
 <wire x1="91.44" y1="17.78" x2="93.98" y2="17.78" width="0.1524" layer="91"/>
 <label x="93.98" y="17.78" size="1.27" layer="95" xref="yes"/>
 </segment>
+</net>
+<net name="IR_RX" class="0">
 <segment>
 <pinref part="JP1" gate="G$1" pin="3"/>
 <wire x1="210.82" y1="104.14" x2="205.74" y2="104.14" width="0.1524" layer="91"/>
 <label x="205.74" y="104.14" size="1.27" layer="95" rot="R180" xref="yes"/>
+</segment>
+<segment>
+<pinref part="U13" gate="G$1" pin="PB0(ICP)"/>
+<wire x1="91.44" y1="20.32" x2="93.98" y2="20.32" width="0.1524" layer="91"/>
+<label x="93.98" y="20.32" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 </nets>

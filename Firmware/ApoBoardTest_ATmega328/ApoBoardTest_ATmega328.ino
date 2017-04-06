@@ -40,7 +40,7 @@ void setup()
 void loop() 
 {  
   // Some example procedures showing how to display to the pixels:
-  colorWipe(strip.Color(255, 0, 0), 50); // Red
+  /*colorWipe(strip.Color(255, 0, 0), 50); // Red
   colorWipe(strip.Color(0, 255, 0), 50); // Green
   colorWipe(strip.Color(0, 0, 255), 50); // Blue
   // Send a theater pixel chase in...
@@ -50,7 +50,7 @@ void loop()
 
   rainbow(20);
   rainbowCycle(20);
-  theaterChaseRainbow(50);
+  theaterChaseRainbow(50);*/
   //for(int i = 0;i++;i
   flashRandom(5, 1);  // first number is 'wait' delay, shorter num == shorter twinkle
   flashRandom(5, 3);  // second number is how many neopixels to simultaneously light up
