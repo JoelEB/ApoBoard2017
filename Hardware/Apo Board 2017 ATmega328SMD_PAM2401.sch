@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="0.005" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="no" active="no"/>
@@ -5266,18 +5266,18 @@ We've spent an enormous amount of time creating and checking these footprints an
 <text x="-2.54" y="-3.556" size="0.762" layer="27">&gt;Value</text>
 </package>
 <package name="LED-RGB-THRU">
-<wire x1="-2.5" y1="1" x2="-2.5" y2="-1" width="0.127" layer="21"/>
-<pad name="2" x="0.889" y="0.9684" drill="0.762" diameter="1.27" shape="long" rot="R90"/>
-<pad name="1" x="2.413" y="-0.9684" drill="0.762" diameter="1.27" shape="long" rot="R90"/>
-<pad name="3" x="-0.635" y="-0.9684" drill="0.762" diameter="1.27" shape="long" rot="R90"/>
-<pad name="4" x="-2.159" y="0.9684" drill="0.762" diameter="1.27" shape="long" rot="R90"/>
-<wire x1="-2.54" y1="1.905" x2="-2.54" y2="-1.905" width="0.2032" layer="21"/>
-<wire x1="-2.54" y1="1.905" x2="-2.54" y2="-1.905" width="0.254" layer="21" curve="-286.260205" cap="flat"/>
-<circle x="0" y="0" radius="2.54" width="0.1524" layer="21"/>
+<pad name="2" x="0.889" y="0.7779" drill="0.762" diameter="1.27" shape="offset" rot="R90"/>
+<pad name="1" x="2.413" y="-0.0476" drill="0.762" diameter="1.27" shape="offset" rot="R270"/>
+<pad name="3" x="-0.635" y="-0.0476" drill="0.762" diameter="1.27" shape="offset" rot="R270"/>
+<pad name="4" x="-2.159" y="0.7779" drill="0.762" diameter="1.27" shape="offset" rot="R90"/>
 <text x="-1.016" y="0.5334" size="0.8128" layer="21">-</text>
 <text x="0.5842" y="-1.0922" size="0.8128" layer="21">+</text>
 <text x="2.0066" y="0.4318" size="0.6096" layer="21">i</text>
 <text x="-2.2352" y="-0.9398" size="0.6096" layer="21">o</text>
+<wire x1="-3.175" y1="2.8575" x2="-3.175" y2="1.4605" width="0.254" layer="21"/>
+<wire x1="-3.175" y1="1.4605" x2="-3.175" y2="-2.159" width="0.254" layer="21"/>
+<wire x1="-3.175" y1="2.8575" x2="-3.175" y2="-2.159" width="0.254" layer="21" curve="-288.461981"/>
+<wire x1="-3.175" y1="1.4605" x2="-3.1115" y2="-0.8255" width="0.254" layer="21" curve="-323.123915"/>
 </package>
 <package name="LED5MM">
 <description>&lt;B&gt;LED&lt;/B&gt;&lt;p&gt;
@@ -8755,7 +8755,7 @@ Standard 0603 ceramic capacitor, and 0.1" leaded capacitor.</description>
 <part name="GND23" library="SparkFun" deviceset="GND" device=""/>
 <part name="P+16" library="supply1" deviceset="+5V" device=""/>
 <part name="GND24" library="SparkFun" deviceset="GND" device=""/>
-<part name="C6" library="SparkFun-Capacitors" deviceset="CAP" device="PTH"/>
+<part name="C6" library="SparkFun-Capacitors" deviceset="CAP" device="1206"/>
 </parts>
 <sheets>
 <sheet>
