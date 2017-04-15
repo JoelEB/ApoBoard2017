@@ -9,9 +9,10 @@
 #include <avr/power.h> // Comment out this line for non-AVR boards (Arduino Due, etc.)
 #include "IRSerial-2014.h"
 
-#define NeoPIN 10
-#define NeoLEDs 10 //number of addressable LEDs
+#define NeoPIN 6// was 10
+#define NeoLEDs 5 //was 10 //number of addressable LEDs
 
+uint8_t brightness = 40; //global brightness
 
 byte black[3]  = { 0, 0, 0 };
 byte white[3]  = { 100, 100, 100 };
@@ -85,6 +86,11 @@ class Neo_event {
     event_duration[LEDnum] = duration;
   }
 
+  uint8_t applybrightness(uint8_t in,uint8_t intensity) {
+    
+    return (uint16_t) (in * intensity) / 100;
+  }
+
   boolean wait(int waitfor, Adafruit_NeoPixel &strip) {
     waitfor = waitfor>0?waitfor:0;
     uint32_t returnTime = millis() + waitfor;
@@ -129,7 +135,11 @@ class Neo_event {
                 current_b[i] = end_b[i];
                 event_type[i] = 0;
               }
-              strip.setPixelColor(i, strip.Color(current_g[i],current_r[i],current_b[i]));
+              strip.setPixelColor(i, strip.Color(
+                  applybrightness(current_g[i],brightness),
+                  applybrightness(current_r[i],brightness),
+                  applybrightness(current_b[i],brightness)
+                  ));
               /*
               Serial.print(i);
               Serial.print(": ");
@@ -174,30 +184,7 @@ int photopot = A1;
 int colorModeMax = 5;
 int colorMode = 0;
 
-//for Backlight_patch(BACKLIGHT_X,HI/LO)
-#define BACKLIGHT_1 1
-#define BACKLIGHT_2 2
-#define BACKLIGHT_3 3
-#define BACKLIGHT_4 4
 
-
-/*
-   Pinout:
-   0, 1: FTDI serial header
-   2, 4, 7: USB D+, D-, Pullup (respectively)
-   8, 9: IR Rx, Tx (respectively)
-   3: Morse LED
-   5, 6, 10, 11: Backlight LEDs
-   12: Button
-   16: Display board UP button
-   23: Display board RIGHT button
-   24: Display board CENTER (ENTER) button
-   25: Display Board DOWN button
-   26: Display Board LEFT button
-   27: SDA
-   28: SCL
-*/
-#define MAKE_ME_A_CONTEST_RUNNER 0
 // IR Parameters
 #define IR_RX 8 //was 8
 #define IR_TX 9 //was 9
@@ -211,30 +198,6 @@ IRSerial irSerial(IR_RX, IR_TX, false, true);
 
 
 
-//BEGIN SERIAL EPIC VARS -darknetstuff
-//bool to see if we have started the SerialEpic
-#define MAX_SERIAL_EPIC_TIME_MS 30000
-#define MAX_SERIAL_ANSWER_LENGTH 10
-//END SERIAL EPIC VARS
-
-// BEGIN STRINGS
-//string that starts serial epic
-static const char* START_SERIAL_EPIC_STRING = "JOSHUA";
-//static const char* SERIAL_PORT_ANSWER = "42";
-#define SERIAL_PORT_QUESTION F("What is the answer to all things?")
-//length of serial string
-#define MIN_SERIAL_LEN  6
-#define SEND_TO_DAEMON F("Send this to daemon: ")
-#define DisplayEpicText F("Who started the \nDC Dark Net?")
-static const char* DisplayEpicAnswer = "SMITTY";
-#define iKnowNot F("I know not what you speak of.")
-#define SPECTER_1337 F("Find specter.  Bring techno.")
-#define sendTheCodes F("https://dcdark.net/  Send the following codes:\n")
-static const char* const PROGMEM LINE1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789!*#@%";
-#define LINE1_LENGTH 42
-#define EMPTY_STR F("")
-#define DKN F("DKN-")
-// END REPEATED STRINGS
 
 //BEGIN GLOBAL VARS:
 //We are getting tight on space so I'm packing variables as tightly as I can
@@ -266,37 +229,7 @@ unsigned long nextBeacon;
 //END GLOBAL VARS
 
 
-//BEGIN MODE_DEFS
-#define MODE_COUNT 9
-#define MODE_MORSE_CODE_EPIC     0
-#define MODE_SNORING             1
-#define MODE_SERIAL_EPIC         2
-#define MODE_DISPLAY_BOARD_EPIC  3
-#define MODE_JUST_A_COOL_DISPLAY   4
-#define MODE_SILK_SCREEN           5
-#define MODE_UBER_BADGE_SYNC       6
-#define MODE_BACKLIGHT             7
-#define MODE_SHUTDOWN              8
-//END MODE DEFS
 
-
-// BEGIN EEPROM count location
-#define MSG_COUNT_ADDR 1022
-#define RESET_STATE_ADDR 1020
-#define GUID_ADDR 1012
-#define KEY_ADDR 1004
-
-// Maximum number of messages
-#define MAX_NUM_MSGS 60
-#define GUID_SIZE 8
-#define MORSE_CODE_ENCODED_MSG 8
-#define TOTAL_STORAGE_SIZE_MSG (GUID_SIZE+MORSE_CODE_ENCODED_MSG)
-#define MAX_MSG_ADDR                     (TOTAL_STORAGE_SIZE_MSG*MAX_NUM_MSGS) //960
-#define START_EPIC_RUN_TIME_STORAGE       MAX_MSG_ADDR+20 //cushion 980
-#define UBER_CRYTPO_CONTEST_RUNNER_ADDR   START_EPIC_RUN_TIME_STORAGE //first 8 bytes uber contest runner KEY then GUID
-#define MAX_EPIC_RUN_TIME_STORAGE         START_EPIC_RUN_TIME_STORAGE+16
-
-// END EEPROM COUNT LOCATION
 
 #define ENDLINE F("\n")
 
@@ -402,7 +335,7 @@ void readContestRunnerKeyAndGUID() {
 #endif
 }
 
-
+/*
 void readInGUIDAndKey() {
   for (char ndx = 0; ndx < 8; ndx++) {
     GUID[ndx] = EEPROM.read(GUID_ADDR + ndx);
@@ -415,6 +348,7 @@ void readInGUIDAndKey() {
   KEY[2] = (EEPROM.read(KEY_ADDR + 4) << 8) + EEPROM.read(KEY_ADDR + 5);
   KEY[3] = (EEPROM.read(KEY_ADDR + 6) << 8) + EEPROM.read(KEY_ADDR + 7);
 }
+*/
 
 /* This is the workhorse function.  Whatever you do elsewhere,
    When you're not working you need to call this so it looks
@@ -466,6 +400,8 @@ void beaconGUID(int timegap) {
     Serial.println(str);
   }
 }
+
+/*
 // TEA (known to be broken) with all word sizes cut in half (64 bit key, 32 bit blocks)
 // Yes, I'm inviting people to hack this if they want. :-)
 // TODO: Since we're giving up on backward compatability in 2014, should we increase this size?
@@ -476,14 +412,15 @@ void encrypt(uint16_t *v) {
     sum += delta;
     v0 += ((v1 << 4) + KEY[0]) ^ (v1 + sum) ^ ((v1 >> 5) + KEY[1]);
     v1 += ((v0 << 4) + KEY[2]) ^ (v0 + sum) ^ ((v0 >> 5) + KEY[3]);
-  }                                              /* end cycle */
+  }                                              // end cycle 
   v[0] = v0; v[1] = v1;
 }
 
 uint16_t getNumMsgs() {
   return (EEPROM.read(MSG_COUNT_ADDR) << 8) + EEPROM.read(MSG_COUNT_ADDR + 1);
 }
-
+*/
+/*
 void writeNumMsgs(uint16_t numMsgs) {
   EEPROM.write(MSG_COUNT_ADDR, numMsgs / 256);
   EEPROM.write(MSG_COUNT_ADDR + 1, numMsgs % 256);
@@ -541,7 +478,7 @@ int writeEEPROM(unsigned char *guid, uint8_t *msg) {
   writeNumMsgs(numMsgs);
   return msgAddr;
 }
-
+*/
 
 // This is our receive buffer, for data we pull out of the
 // IRSerial library.  This is _NOT_ the buffer the IRSerial
@@ -976,9 +913,6 @@ void setup() {
   PackedVars.swapKeyAndGUID = 0;
   PackedVars.modeInit = 0;
 
-  // BLINKY SHINY!
-  PackedVars.LEDMode = EEPROM.read(RESET_STATE_ADDR) % MODE_COUNT;
-  EEPROM.write(RESET_STATE_ADDR, (PackedVars.LEDMode + 1) % MODE_COUNT);
   digitalWrite(13, LOW);
   
   //NeoPixel init
@@ -1092,6 +1026,8 @@ void circularCylon()
 
 void loop()
 {
+  //brightness test code
+  brightness ++; if (brightness>100 || brightness <0) brightness = 0;
   circularCylon();
 }
 
