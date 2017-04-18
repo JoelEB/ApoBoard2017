@@ -606,6 +606,24 @@ will be further integrated into the Sparkfun Library for other footprints.  It c
 <vertex x="3.4544" y="-0.4826"/>
 <vertex x="3.4544" y="-0.9906" curve="-90"/>
 </polygon>
+<polygon width="0.127" layer="29">
+<vertex x="-2.54" y="-0.4445" curve="-90.012891"/>
+<vertex x="-2.9845" y="-0.0203" curve="-90"/>
+<vertex x="-2.54" y="0.447" curve="-90"/>
+<vertex x="-2.0981" y="-0.0101" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="0" y="-0.4445" curve="-90.012891"/>
+<vertex x="-0.4445" y="-0.0203" curve="-90"/>
+<vertex x="0" y="0.447" curve="-90"/>
+<vertex x="0.4419" y="-0.0101" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="2.54" y="-0.4445" curve="-90.012891"/>
+<vertex x="2.0955" y="-0.0203" curve="-90"/>
+<vertex x="2.54" y="0.447" curve="-90"/>
+<vertex x="2.9819" y="-0.0101" curve="-90.012967"/>
+</polygon>
 </package>
 <package name="1X02">
 <wire x1="-0.635" y1="1.27" x2="0.635" y2="1.27" width="0.2032" layer="21"/>
@@ -847,6 +865,18 @@ will be further integrated into the Sparkfun Library for other footprints.  It c
 <vertex x="3.4798" y="0.9398" curve="90"/>
 <vertex x="2.54" y="1.8796" curve="90"/>
 <vertex x="1.5748" y="0.9144"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="2.54" y="-0.4445" curve="-90.012891"/>
+<vertex x="2.0955" y="-0.0203" curve="-90"/>
+<vertex x="2.54" y="0.447" curve="-90"/>
+<vertex x="2.9819" y="-0.0101" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="0" y="-0.4445" curve="-90.012891"/>
+<vertex x="-0.4445" y="-0.0203" curve="-90"/>
+<vertex x="0" y="0.447" curve="-90"/>
+<vertex x="0.4419" y="-0.0101" curve="-90.012967"/>
 </polygon>
 </package>
 <package name="1X02_NO_SILK">
@@ -5536,6 +5566,30 @@ We've spent an enormous amount of time creating and checking these footprints an
 <vertex x="2.413" y="-1.905" curve="-90"/>
 <vertex x="1.8034" y="-1.2954"/>
 </polygon>
+<polygon width="0.127" layer="29">
+<vertex x="-2.159" y="0.3175" curve="-90.012891"/>
+<vertex x="-2.6035" y="0.7417" curve="-90"/>
+<vertex x="-2.159" y="1.209" curve="-90"/>
+<vertex x="-1.7171" y="0.7519" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="0.889" y="0.3175" curve="-90.012891"/>
+<vertex x="0.4445" y="0.7417" curve="-90"/>
+<vertex x="0.889" y="1.209" curve="-90"/>
+<vertex x="1.3309" y="0.7519" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="-0.635" y="-0.508" curve="-90.012891"/>
+<vertex x="-1.0795" y="-0.0838" curve="-90"/>
+<vertex x="-0.635" y="0.3835" curve="-90"/>
+<vertex x="-0.1931" y="-0.0736" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="2.413" y="-0.508" curve="-90.012891"/>
+<vertex x="1.9685" y="-0.0838" curve="-90"/>
+<vertex x="2.413" y="0.3835" curve="-90"/>
+<vertex x="2.8549" y="-0.0736" curve="-90.012967"/>
+</polygon>
 </package>
 </packages>
 <symbols>
@@ -6210,6 +6264,30 @@ We've spent an enormous amount of time creating and checking these footprints an
 <vertex x="-3.2512" y="3.2512"/>
 <vertex x="-3.2766" y="3.2512" curve="90"/>
 <vertex x="-4.2418" y="2.286"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="-3.2385" y="1.8415" curve="-90.012891"/>
+<vertex x="-3.683" y="2.2657" curve="-90"/>
+<vertex x="-3.2385" y="2.733" curve="-90"/>
+<vertex x="-2.7966" y="2.2759" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="3.2385" y="1.8415" curve="-90.012891"/>
+<vertex x="2.794" y="2.2657" curve="-90"/>
+<vertex x="3.2385" y="2.733" curve="-90"/>
+<vertex x="3.6804" y="2.2759" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="-3.2385" y="-2.7305" curve="-90.012891"/>
+<vertex x="-3.683" y="-2.3063" curve="-90"/>
+<vertex x="-3.2385" y="-1.839" curve="-90"/>
+<vertex x="-2.7966" y="-2.2961" curve="-90.012967"/>
+</polygon>
+<polygon width="0.127" layer="29">
+<vertex x="3.2385" y="-2.7305" curve="-90.012891"/>
+<vertex x="2.794" y="-2.3063" curve="-90"/>
+<vertex x="3.2385" y="-1.839" curve="-90"/>
+<vertex x="3.6804" y="-2.2961" curve="-90.012967"/>
 </polygon>
 </package>
 <package name="TACTILE_SWITCH_SMD">
@@ -8737,19 +8815,24 @@ Standard 0603 ceramic capacitor, and 0.1" leaded capacitor.</description>
 <library name="1_BES_ELECTROMECHANICAL">
 <packages>
 <package name="BATT_HOLDER_AA_2466">
-<wire x1="24.13" y1="-5.2705" x2="24.13" y2="5.2705" width="0.1778" layer="21"/>
-<wire x1="24.13" y1="5.2705" x2="22.86" y2="6.5405" width="0.1778" layer="21" curve="90"/>
-<wire x1="22.86" y1="6.5405" x2="-24.13" y2="6.5405" width="0.1778" layer="21"/>
-<wire x1="-24.13" y1="6.5405" x2="-25.4" y2="5.2705" width="0.1778" layer="21" curve="90"/>
-<wire x1="-25.4" y1="5.2705" x2="-25.4" y2="-5.2705" width="0.1778" layer="21"/>
-<wire x1="-25.4" y1="-5.2705" x2="-24.13" y2="-6.5405" width="0.1778" layer="21" curve="90"/>
-<wire x1="-24.13" y1="-6.5405" x2="22.86" y2="-6.5405" width="0.1778" layer="21"/>
-<wire x1="22.86" y1="-6.5405" x2="24.13" y2="-5.2705" width="0.1778" layer="21" curve="90"/>
-<wire x1="26.67" y1="1.27" x2="26.67" y2="-1.27" width="0.254" layer="21"/>
-<wire x1="25.4" y1="0" x2="27.94" y2="0" width="0.254" layer="21"/>
-<wire x1="-26.67" y1="-1.27" x2="-26.67" y2="1.27" width="0.254" layer="21"/>
-<pad name="N" x="-22.352" y="0" drill="1.27" diameter="2.286"/>
-<pad name="P" x="20.32" y="0" drill="1.27" diameter="2.286"/>
+<wire x1="28.575" y1="-7.1755" x2="28.575" y2="7.3025" width="0.1778" layer="21"/>
+<wire x1="28.575" y1="7.3025" x2="27.305" y2="8.5725" width="0.1778" layer="21" curve="90"/>
+<wire x1="27.305" y1="8.5725" x2="-27.305" y2="8.5725" width="0.1778" layer="21"/>
+<wire x1="-27.305" y1="8.5725" x2="-28.575" y2="7.3025" width="0.1778" layer="21" curve="90"/>
+<wire x1="-28.575" y1="7.3025" x2="-28.575" y2="-7.1755" width="0.1778" layer="21"/>
+<wire x1="-28.575" y1="-7.1755" x2="-27.305" y2="-8.4455" width="0.1778" layer="21" curve="90"/>
+<wire x1="-27.305" y1="-8.4455" x2="27.305" y2="-8.4455" width="0.1778" layer="21"/>
+<wire x1="27.305" y1="-8.4455" x2="28.575" y2="-7.1755" width="0.1778" layer="21" curve="90"/>
+<pad name="N" x="-25.4" y="0.254" drill="1.27" diameter="2.286"/>
+<pad name="P" x="25.4" y="0.254" drill="1.27" diameter="2.286"/>
+<dimension x1="-28.575" y1="7.3025" x2="28.575" y2="7.3025" x3="0" y3="26.035" textsize="1.27" layer="47" unit="inch"/>
+<dimension x1="25.4" y1="0.254" x2="-25.4" y2="0.254" x3="0" y3="21.844" textsize="1.27" layer="47" unit="inch"/>
+<dimension x1="27.305" y1="-8.4455" x2="27.305" y2="8.5725" x3="45.085" y3="0.0635" textsize="1.27" layer="47" unit="inch"/>
+<circle x="-31.75" y="0" radius="2.54" width="0.3048" layer="21"/>
+<wire x1="-34.163" y1="0" x2="-29.337" y2="0" width="0.6096" layer="21"/>
+<circle x="31.75" y="0" radius="2.54" width="0.3048" layer="21"/>
+<wire x1="29.337" y1="0" x2="34.163" y2="0" width="0.6096" layer="21"/>
+<wire x1="31.75" y1="2.413" x2="31.75" y2="-2.286" width="0.6096" layer="21"/>
 </package>
 <package name="BATT_HOLDER_CR2032_MPD_BS3">
 <circle x="0" y="0" radius="11.5062" width="0.127" layer="21"/>
@@ -8830,11 +8913,11 @@ Standard 0603 ceramic capacitor, and 0.1" leaded capacitor.</description>
 </class>
 </classes>
 <parts>
-<part name="U3" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
-<part name="U4" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
-<part name="U5" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
-<part name="U6" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
-<part name="U7" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
+<part name="U3" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
+<part name="U4" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
+<part name="U5" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
+<part name="U6" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
+<part name="U7" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
 <part name="GND1" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="GND2" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="GND3" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
@@ -8850,11 +8933,11 @@ Standard 0603 ceramic capacitor, and 0.1" leaded capacitor.</description>
 <part name="P+7" library="supply1" deviceset="+5V" device=""/>
 <part name="GND15" library="supply1" deviceset="GND" device=""/>
 <part name="JP4" library="SparkFun-Connectors" deviceset="FTDI_BASIC" device="PTH"/>
-<part name="U2" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
-<part name="U8" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
-<part name="U9" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
-<part name="U10" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
-<part name="U11" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value=""/>
+<part name="U2" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
+<part name="U8" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
+<part name="U9" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
+<part name="U10" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
+<part name="U11" library="SparkFun-LED" deviceset="LED-TRICOLOR-5050-IC" device="WS2812-THRU-KIT" value="LED-TRICOLOR-5050-ICWS2812-THRU-KIT"/>
 <part name="GND6" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="GND12" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="GND13" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
