@@ -9,8 +9,8 @@
 #include <avr/power.h> // Comment out this line for non-AVR boards (Arduino Due, etc.)
 #include "IRSerial-2014.h"
 
-#define NeoPIN 6// was 10
-#define NeoLEDs 5 //was 10 //number of addressable LEDs
+#define NeoPIN 7// was 10
+#define NeoLEDs 10 //was 10 //number of addressable LEDs
 
 uint8_t brightness = 40; //global brightness
 
