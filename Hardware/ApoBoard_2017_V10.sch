@@ -5315,7 +5315,7 @@ Commonly used for 1/4W through-hole resistors. 0.3" pitch between holes.&lt;br&g
 <pad name="P$1" x="-3.81" y="0" drill="1.016" diameter="2.032" stop="no"/>
 <pad name="P$2" x="3.81" y="0" drill="1.016" diameter="2.032" stop="no"/>
 <text x="-2.54" y="1.27" size="0.4064" layer="25" font="vector">&gt;Name</text>
-<text x="-2.159" y="-0.762" size="1.27" layer="21" font="vector" ratio="15">&gt;Value</text>
+<text x="0" y="0" size="1.27" layer="21" font="vector" ratio="15" align="center">&gt;Value</text>
 <polygon width="0.127" layer="30">
 <vertex x="3.8201" y="-0.9449" curve="-90"/>
 <vertex x="2.8652" y="-0.0152" curve="-90.011749"/>
@@ -7832,8 +7832,8 @@ CAP-08402</description>
 <wire x1="-28.575" y1="-7.1755" x2="-27.305" y2="-8.4455" width="0.1778" layer="21" curve="90"/>
 <wire x1="-27.305" y1="-8.4455" x2="27.305" y2="-8.4455" width="0.1778" layer="21"/>
 <wire x1="27.305" y1="-8.4455" x2="28.575" y2="-7.1755" width="0.1778" layer="21" curve="90"/>
-<pad name="N" x="-25.4" y="0.254" drill="1.27" diameter="2.286" stop="no"/>
-<pad name="P" x="25.4" y="0.254" drill="1.27" diameter="2.286" stop="no"/>
+<pad name="N" x="-25.4" y="0.254" drill="1.27" diameter="2.286" shape="long" stop="no"/>
+<pad name="P" x="25.4" y="0.254" drill="1.27" diameter="2.286" shape="long" stop="no"/>
 <dimension x1="-28.575" y1="7.3025" x2="28.575" y2="7.3025" x3="0" y3="26.035" textsize="1.27" layer="47" unit="inch"/>
 <dimension x1="25.4" y1="0.254" x2="-25.4" y2="0.254" x3="0" y3="21.844" textsize="1.27" layer="47" unit="inch"/>
 <dimension x1="27.305" y1="-8.4455" x2="27.305" y2="8.5725" x3="45.085" y3="0.0635" textsize="1.27" layer="47" unit="inch"/>
@@ -7853,16 +7853,22 @@ CAP-08402</description>
 <vertex x="25.4" y="-0.4445" curve="-90"/>
 </polygon>
 <polygon width="0.127" layer="30">
-<vertex x="-26.67" y="0.254" curve="-90"/>
-<vertex x="-25.4" y="1.524" curve="-92.794335"/>
-<vertex x="-24.13" y="0.1905" curve="-87.349016"/>
-<vertex x="-25.4" y="-1.016" curve="-89.706942"/>
+<vertex x="25.4" y="1.4605"/>
+<vertex x="26.543" y="1.4605" curve="-90"/>
+<vertex x="27.7495" y="0.254" curve="-90"/>
+<vertex x="26.543" y="-0.9525"/>
+<vertex x="24.257" y="-0.9525" curve="-90"/>
+<vertex x="23.0505" y="0.254" curve="-90"/>
+<vertex x="24.257" y="1.4605"/>
 </polygon>
 <polygon width="0.127" layer="30">
-<vertex x="24.13" y="0.254" curve="-90"/>
-<vertex x="25.4" y="1.524" curve="-92.794335"/>
-<vertex x="26.67" y="0.1905" curve="-87.349016"/>
-<vertex x="25.4" y="-1.016" curve="-89.706942"/>
+<vertex x="-25.4" y="1.4605"/>
+<vertex x="-24.257" y="1.4605" curve="-90"/>
+<vertex x="-23.0505" y="0.254" curve="-90"/>
+<vertex x="-24.257" y="-0.9525"/>
+<vertex x="-26.543" y="-0.9525" curve="-90"/>
+<vertex x="-27.7495" y="0.254" curve="-90"/>
+<vertex x="-26.543" y="1.4605"/>
 </polygon>
 </package>
 <package name="BATT_HOLDER_CR2032_MPD_BS3">
@@ -8045,6 +8051,12 @@ CAP-08402</description>
 <part name="GND14" library="SparkFun" deviceset="GND" device=""/>
 <part name="BATT1" library="1_BES_ELECTROMECHANICAL" deviceset="BATTERY_HOLDER" device="AA_2466" value="BATTERY_HOLDERAA_2466"/>
 <part name="GND21" library="SparkFun" deviceset="GND" device=""/>
+<part name="TP7" library="SparkFun-Passives" deviceset="TEST-POINT" device="3X5" value="TP-3x5"/>
+<part name="TP8" library="SparkFun-Passives" deviceset="TEST-POINT" device="3X5" value="TP-3x5"/>
+<part name="TP9" library="SparkFun-Passives" deviceset="TEST-POINT" device="3X5" value="TP-3x5"/>
+<part name="TP10" library="SparkFun-Passives" deviceset="TEST-POINT" device="3X5" value="TP-3x5"/>
+<part name="GND17" library="SparkFun" deviceset="GND" device=""/>
+<part name="P+16" library="supply1" deviceset="+5V" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -8065,6 +8077,9 @@ PAM2401 </text>
 <text x="53.34" y="81.28" size="2.54" layer="97">ATMEGA328P-AU</text>
 <text x="172.72" y="81.28" size="2.54" layer="97">ATMEGA328P Programming</text>
 <text x="237.49" y="6.35" size="2.54" layer="94">V0.1</text>
+<text x="116.84" y="48.26" size="1.27" layer="97">Test Points 7-10: 
+I2C and Analog/Digital 
+Expansion Port</text>
 </plain>
 <instances>
 <instance part="U3" gate="U1" x="160.02" y="172.72"/>
@@ -8176,6 +8191,20 @@ PAM2401 </text>
 <instance part="GND21" gate="1" x="30.48" y="38.1" smashed="yes" rot="R270">
 <attribute name="VALUE" x="27.94" y="40.64" size="1.778" layer="96" rot="R270"/>
 </instance>
+<instance part="TP7" gate="G$1" x="93.98" y="55.88" smashed="yes">
+<attribute name="NAME" x="97.536" y="55.118" size="1.778" layer="95"/>
+</instance>
+<instance part="TP8" gate="G$1" x="93.98" y="53.34" smashed="yes">
+<attribute name="NAME" x="97.536" y="52.578" size="1.778" layer="95"/>
+</instance>
+<instance part="TP9" gate="G$1" x="114.3" y="60.96" smashed="yes">
+<attribute name="NAME" x="117.856" y="60.198" size="1.778" layer="95"/>
+</instance>
+<instance part="TP10" gate="G$1" x="114.3" y="55.88" smashed="yes">
+<attribute name="NAME" x="117.856" y="55.118" size="1.778" layer="95"/>
+</instance>
+<instance part="GND17" gate="1" x="111.76" y="50.8" rot="MR0"/>
+<instance part="P+16" gate="1" x="111.76" y="66.04"/>
 </instances>
 <busses>
 </busses>
@@ -8335,6 +8364,12 @@ PAM2401 </text>
 <segment>
 <pinref part="Q1" gate="G$1" pin="2"/>
 <pinref part="GND21" gate="1" pin="GND"/>
+</segment>
+<segment>
+<pinref part="TP10" gate="G$1" pin="1"/>
+<pinref part="GND17" gate="1" pin="GND"/>
+<wire x1="114.3" y1="55.88" x2="111.76" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="111.76" y1="55.88" x2="111.76" y2="53.34" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="MOSI" class="0">
@@ -8544,6 +8579,12 @@ PAM2401 </text>
 <wire x1="93.98" y1="121.92" x2="93.98" y2="116.84" width="0.1524" layer="91"/>
 <junction x="93.98" y="121.92"/>
 </segment>
+<segment>
+<pinref part="P+16" gate="1" pin="+5V"/>
+<pinref part="TP9" gate="G$1" pin="1"/>
+<wire x1="111.76" y1="63.5" x2="111.76" y2="60.96" width="0.1524" layer="91"/>
+<wire x1="111.76" y1="60.96" x2="114.3" y2="60.96" width="0.1524" layer="91"/>
+</segment>
 </net>
 <net name="TX" class="0">
 <segment>
@@ -8650,20 +8691,6 @@ PAM2401 </text>
 <label x="106.68" y="38.1" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
-<net name="N$22" class="0">
-<segment>
-<wire x1="91.44" y1="53.34" x2="93.98" y2="53.34" width="0.1524" layer="91"/>
-<label x="93.98" y="53.34" size="1.27" layer="95" xref="yes"/>
-<pinref part="U13" gate="G$1" pin="PC5(ADC5/SCL)"/>
-</segment>
-</net>
-<net name="N$23" class="0">
-<segment>
-<wire x1="91.44" y1="55.88" x2="93.98" y2="55.88" width="0.1524" layer="91"/>
-<label x="93.98" y="55.88" size="1.27" layer="95" xref="yes"/>
-<pinref part="U13" gate="G$1" pin="PC4(ADC4/SDA)"/>
-</segment>
-</net>
 <net name="N$24" class="0">
 <segment>
 <wire x1="91.44" y1="58.42" x2="93.98" y2="58.42" width="0.1524" layer="91"/>
@@ -8676,20 +8703,6 @@ PAM2401 </text>
 <wire x1="91.44" y1="60.96" x2="93.98" y2="60.96" width="0.1524" layer="91"/>
 <label x="93.98" y="60.96" size="1.27" layer="95" xref="yes"/>
 <pinref part="U13" gate="G$1" pin="PC2(ADC2)"/>
-</segment>
-</net>
-<net name="N$26" class="0">
-<segment>
-<wire x1="91.44" y1="63.5" x2="93.98" y2="63.5" width="0.1524" layer="91"/>
-<label x="93.98" y="63.5" size="1.27" layer="95" xref="yes"/>
-<pinref part="U13" gate="G$1" pin="PC1(ADC1)"/>
-</segment>
-</net>
-<net name="N$27" class="0">
-<segment>
-<wire x1="91.44" y1="66.04" x2="93.98" y2="66.04" width="0.1524" layer="91"/>
-<label x="93.98" y="66.04" size="1.27" layer="95" xref="yes"/>
-<pinref part="U13" gate="G$1" pin="PC0(ADC0)"/>
 </segment>
 </net>
 <net name="AREF" class="0">
@@ -8786,6 +8799,20 @@ PAM2401 </text>
 <pinref part="U13" gate="G$1" pin="PB0(ICP)"/>
 <wire x1="91.44" y1="20.32" x2="93.98" y2="20.32" width="0.1524" layer="91"/>
 <label x="93.98" y="20.32" size="1.27" layer="95" xref="yes"/>
+</segment>
+</net>
+<net name="N$4" class="0">
+<segment>
+<pinref part="U13" gate="G$1" pin="PC4(ADC4/SDA)"/>
+<pinref part="TP7" gate="G$1" pin="1"/>
+<wire x1="93.98" y1="55.88" x2="91.44" y2="55.88" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$7" class="0">
+<segment>
+<pinref part="U13" gate="G$1" pin="PC5(ADC5/SCL)"/>
+<pinref part="TP8" gate="G$1" pin="1"/>
+<wire x1="93.98" y1="53.34" x2="91.44" y2="53.34" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>

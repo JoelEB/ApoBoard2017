@@ -11,6 +11,16 @@
 
 #define NeoPIN 7// was 10
 #define NeoLEDs 10 //was 10 //number of addressable LEDs
+#define modeButton 2
+
+// Variables will change:
+int buttonState;             // the current reading from the input pin
+int lastButtonState = LOW;   // the previous reading from the input pin
+
+// the following variables are unsigned long's because the time, measured in miliseconds,
+// will quickly become a bigger number than can be stored in an int.
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
 
 uint8_t brightness = 40; //global brightness
 
@@ -892,6 +902,8 @@ Neo_event neo;
 
 
 void setup() {
+  pinMode(modeButton, INPUT_PULLUP);
+  
   uint32_t  PUFhash_result = PUF_hash();
   Serial.begin(SERIAL_BAUD);
   Serial.print("\n");
@@ -941,7 +953,7 @@ void setup() {
   const uint8_t center2 = 5;
 
 
-  uint32_t magenta = strip.Color(0, 0x3F, 0x3F);//GRB
+  uint32_t magenta = strip.Color(0, 0xFF, 0xFF);//GRB
 /*
 void regularCylon() {
     //joel this is a debug line a may be ignored irSerial.write_SPECTER(0xF0);
@@ -1027,7 +1039,7 @@ void circularCylon()
 void loop()
 {
   //brightness test code
-  brightness ++; if (brightness>100 || brightness <0) brightness = 0;
+  //brightness ++; if (brightness>100 || brightness <0) brightness = 0;
   circularCylon();
 }
 
