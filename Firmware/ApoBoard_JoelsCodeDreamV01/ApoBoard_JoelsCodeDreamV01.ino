@@ -42,8 +42,8 @@ class Colorsets{
   uint32_t colorarray [NumEffects] [8] = {
     {0xFF0000,0x00FF00,0x0000FF,0x00FFFF,     0,0,0,0}, //coder colorz
     {0xFF3377,0x119933,0x220044,0x880044,     0x110022,0x440022,0x771133,0x004411}, //coder colorz
-    {0xFF3377,0x119933,0x220044,0x880044,     0x080011,0x003311,0x110811,0x002208} //coder colorz
-    
+    {0xFF3377,0x119933,0x220044,0x880044,     0x080011,0x003311,0x110811,0x002208}, //coder colorz
+    {0x00FF00,0x00FF00,0x00FF00,0x00FF00,     0x000200,0x000200,0x000200,0x000200} //RED only
   };
   
   uint32_t getFG(uint8_t colorsetnum, int8_t FGdelta) {
@@ -1078,20 +1078,102 @@ void NeoEffect_spider2(uint8_t colorsetnum, Colorsets colorset, int period) {
   BGcounter ++;
 }
 
+const uint8_t cylon_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
+  {2,3},
+  {1,4},
+  {0,5},
+  {9,6},
+  {8,7},
+  {0xFF,0xFF}, //turn all leds off
+  {8,7},
+  {9,6},
+  {0,5},
+  {1,4},
+  {2,3},
+  {0xFF,0xFF}, //turn all leds off
+  
+};
+
+#define cylon_effect_anim_length 12
+void NeoEffect_cylon(uint8_t colorsetnum, Colorsets colorset, int period) {
+  
+  uint8_t ON = effect_counterA % cylon_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % cylon_effect_anim_length;
+  
+  if (cylon_effect_anim[ON][0] != 0xFF) {
+    neo.fadeto( cylon_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( cylon_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( cylon_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
+    neo.fadeto( cylon_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
+    neo.wait(period, strip);
+  }
+  else {
+    for (OFF = 0;OFF<NeoLEDs;OFF++) {
+      neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time 
+    }
+    neo.wait(period << 2, strip);
+    FGcounter ++;
+    BGcounter ++;
+  }
+  effect_counterA ++;
+}
+
+const uint8_t cylon2_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
+  {2,3},
+  {1,4},
+  {0,5},
+  {9,6},
+  {8,7},
+  //{0xFF,0xFF}, //turn all leds off
+  //{8,7},
+  {9,6},
+  {0,5},
+  {1,4},
+  //{2,3},
+  //{0xFF,0xFF}, //turn all leds off
+  
+};
+
+#define cylon2_effect_anim_length 8
+void NeoEffect_cylon2(uint8_t colorsetnum, Colorsets colorset, int period) {
+  
+  uint8_t ON = effect_counterA % cylon2_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % cylon2_effect_anim_length;
+  
+  if (cylon2_effect_anim[ON][0] != 0xFF) {
+    neo.fadeto( cylon2_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( cylon2_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( cylon2_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
+    neo.fadeto( cylon2_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
+    neo.wait(period, strip);
+  }
+  else {
+    for (OFF = 0;OFF<NeoLEDs;OFF++) {
+      neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time 
+    }
+    neo.wait(period << 2, strip);
+    FGcounter ++;
+    BGcounter ++;
+  }
+  effect_counterA ++;
+}
+
 
 
 
 /////////////////////////////////////////////////////////////
 
   
-const uint8_t current_effect = 0;
-uint8_t colorsetnum = 2;
+const uint8_t current_effect = 4;
+uint8_t colorsetnum = 3;
 void loop()
 {
   switch (current_effect) {
   case 0: NeoEffect_portal (colorsetnum, colorset, 200); break;
   case 1: NeoEffect_spider (colorsetnum, colorset, 100); break;
   case 2: NeoEffect_spider2(colorsetnum, colorset, 50);  break;
+  case 3: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
+  case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
   }
 }
 
