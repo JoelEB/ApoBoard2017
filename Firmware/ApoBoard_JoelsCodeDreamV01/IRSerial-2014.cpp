@@ -705,7 +705,7 @@ ISR(TIMER1_COMPB_vect) {
     TX_ontime = TX_starttime;
     TX_offtime = TX_gaptime; 
     TX_shift_counter --;
-    //Serial.print("+");
+    Serial.print("+");
   }
   else if (TX_shift_counter > 0) {
     if (TX_shift_out | 0x80) {
@@ -717,10 +717,10 @@ ISR(TIMER1_COMPB_vect) {
     TX_offtime = TX_gaptime;
     TX_shift_out >>= 1;
     TX_shift_counter --;
-    //Serial.print(".");
+    Serial.print(".");
   }
   else {
-    //Serial.println("-");
+    Serial.println("-");
     TIMSK1 = oldTIMSK1;
     TCCR1A = oldTCCR1A;
     TCCR1B = oldTCCR1B;

@@ -9,9 +9,9 @@
 #include <avr/power.h> // Comment out this line for non-AVR boards (Arduino Due, etc.)
 #include "IRSerial-2014.h"
 
-#define NeoPIN 6// was 10
-#define NeoLEDs 5 //was 10 //number of addressable LEDs
-
+#define NeoPIN 7// was 10
+#define NeoLEDs 10 //was 10 //number of addressable LEDs
+#define NumEffects 10
 uint8_t brightness = 40; //global brightness
 
 byte black[3]  = { 0, 0, 0 };
@@ -32,6 +32,29 @@ int teal[3] =   {  0, 50, 100 };
 int blue[3]   = {  0,  0, 100 };
 int purple[3] = { 50,  0, 100 };
 int darkpurple[3] ={100, 0, 100 };
+
+uint8_t BGcounter = 0; //global for Background color counter
+uint8_t FGcounter = 0; //global for Foreground color counter
+
+
+class Colorsets{
+  public:
+  uint32_t colorarray [NumEffects] [8] = {
+    {0xFF0000,0x00FF00,0x0000FF,0x00FFFF,     0,0,0,0}, //coder colorz
+    {0xFF3377,0x119933,0x220044,0x880044,     0x110022,0x440022,0x771133,0x004411}, //coder colorz
+    {0xFF3377,0x119933,0x220044,0x880044,     0x080011,0x003311,0x110811,0x002208} //coder colorz
+    
+  };
+  
+  uint32_t getFG(uint8_t colorsetnum, int8_t FGdelta) {
+    FGcounter += FGdelta;
+    return (colorarray[colorsetnum] [FGcounter % 4]);
+  }
+  uint32_t getBG(uint8_t colorsetnum, int8_t BGdelta) {
+    BGcounter += BGdelta;
+    return (colorarray[colorsetnum] [4 + BGcounter % 4]);
+  }
+};
 
 class Neo_event {
   public:
@@ -58,17 +81,17 @@ class Neo_event {
   boolean setcolor(uint8_t LEDnum, uint32_t Color) {
     LEDnum %= NeoLEDs;
     event_type[LEDnum] = event_setcolor;
-    init_g[LEDnum] = (Color >> 16) & 0xFF;
-    init_r[LEDnum] = (Color >> 8) & 0xFF;
-    init_b[LEDnum] = Color & 0xFF;
+    init_g[LEDnum] = (Color >> 17) & 0x7F;
+    init_r[LEDnum] = (Color >> 9) & 0x7F;
+    init_b[LEDnum] = (Color >> 1) & 0x7F;
   }
 
   boolean fadeto(uint8_t LEDnum, uint32_t Color, uint16_t duration) {
     LEDnum %= NeoLEDs;
     event_type[LEDnum] = event_fadeto;
-    end_g[LEDnum] = (Color >> 16) & 0xFF;
-    end_r[LEDnum] = (Color >> 8) & 0xFF;
-    end_b[LEDnum] = Color & 0xFF;
+    end_g[LEDnum] = (Color >> 17) & 0x7F;
+    end_r[LEDnum] = (Color >> 9) & 0x7F;
+    end_b[LEDnum] = (Color >> 1) & 0x7F;
     init_r[LEDnum] = current_r[LEDnum];
     init_g[LEDnum] = current_g[LEDnum];
     init_b[LEDnum] = current_b[LEDnum];
@@ -79,9 +102,9 @@ class Neo_event {
     /*Serial.print("fadeto: [");
     Serial.print(LEDnum);
     Serial.print("] ");
-    Serial.print(init_r[LEDnum]);
+    Serial.print(init_g[LEDnum],HEX);
     Serial.print(" -> ");
-    Serial.println(end_r[LEDnum]);*/
+    Serial.println(end_g[LEDnum],HEX);*/
     event_starttime[LEDnum] = millis();  
     event_duration[LEDnum] = duration;
   }
@@ -135,19 +158,24 @@ class Neo_event {
                 current_b[i] = end_b[i];
                 event_type[i] = 0;
               }
-              strip.setPixelColor(i, strip.Color(
+              /*strip.setPixelColor(i, strip.Color(
                   applybrightness(current_g[i],brightness),
                   applybrightness(current_r[i],brightness),
                   applybrightness(current_b[i],brightness)
+                  ));*/
+              strip.setPixelColor(i, strip.Color(
+                  current_g[i],
+                  current_r[i],
+                  current_b[i]
                   ));
               /*
               Serial.print(i);
               Serial.print(": ");
-              Serial.print(current_r[i],HEX);
+              Serial.print(end_g[i] - init_g[i],HEX);
               Serial.print(", ");
-              Serial.print(current_g[i],HEX);
+              Serial.print(diff_g[i],HEX);
               Serial.print(", ");
-              Serial.println(current_b[i],HEX);
+              Serial.println(current_g[i],HEX);
               delay(10); //slow down serial output
               */
               break;              
@@ -889,10 +917,19 @@ void delayAndReadIRSpecter(int pauseFor, Neo_event &ne) {
 
 
 Neo_event neo;
+Colorsets colorset;
 
 
 void setup() {
   uint32_t  PUFhash_result = PUF_hash();
+  strip.begin();
+  //meaningless for ours   strip.setBrightness(255);
+  for (int i=0; i < NeoLEDs; i++) {
+    strip.setPixelColor(i, strip.Color(0x3F,0,0));  //NOTE ORDER!: GRB
+  }
+  strip.show(); // Initialize all pixels to 'off'
+  
+  
   Serial.begin(SERIAL_BAUD);
   Serial.print("\n");
   Serial.print(F("PUFhash = "));
@@ -906,7 +943,7 @@ void setup() {
   pinMode(IR_RX, INPUT_PULLUP);
   delay(200);  // Reset "debounce"
 
-  // Setup the IR buffers and timers.
+  // Swetup the IR buffers and timers.
   nextBeacon = millis();
   clearRxBuf();
 
@@ -918,15 +955,10 @@ void setup() {
   //NeoPixel init
   pinMode(button, INPUT);
   pinMode(photopot, INPUT);
-  strip.begin();
-  strip.setBrightness(255);
-  strip.setPixelColor(0, strip.Color(0x3F,0,0));  //NOTE ORDER!: GRB
-  
-  strip.show(); // Initialize all pixels to 'off'
   Serial.println("Starting kernel loop");
-  strip.setPixelColor(0, 0x00000000);
-  strip.show();
+  
 }
+
 
   uint32_t cylon_BGcolor = 0x000000; //((uint32_t)r << 16) | ((uint32_t)g << 8) |
   uint32_t cylon_BGcolor2;
@@ -936,55 +968,9 @@ void setup() {
   uint8_t cylon_current_LEDnum = 4;
   boolean cylon_dir = true;
   //fix negative elspased time
-  
   const uint8_t center1 = 4;
   const uint8_t center2 = 5;
-
-
   uint32_t magenta = strip.Color(0, 0x3F, 0x3F);//GRB
-/*
-void regularCylon() {
-    //joel this is a debug line a may be ignored irSerial.write_SPECTER(0xF0);
-    const  uint32_t cylon_BGcolor = 0x000000; //((uint32_t)r << 16) | ((uint32_t)g << 8) |
-    uint32_t cylon_FGcolor; //RED 25%;
-    uint8_t last_cylon = 0;
-    uint8_t cylon_current_LEDnum = 0;
-    boolean cylon_dir = true;
-    //fix negative elspased time
-    
-    cylon_FGcolor = (uint32_t)(0x40<<8); // GRB
-    
-    neo.fadeto(cylon_current_LEDnum, cylon_FGcolor, 0);  //lednum, Color, FadeTime
-    
-    neo.fadeto(last_cylon, cylon_BGcolor, 500);
-    
-    
-    neo.wait(100, strip);
-    
-    
-    
-    last_cylon = cylon_current_LEDnum;
-    if (cylon_dir) {
-      cylon_current_LEDnum ++;
-      if (cylon_current_LEDnum >= (NeoLEDs - 1)) {
-        cylon_current_LEDnum = NeoLEDs - 1;
-        cylon_dir = false;
-      }
-    }
-    else  {
-      cylon_current_LEDnum --;
-      if (cylon_current_LEDnum <=0) {
-        cylon_current_LEDnum = 0;
-        cylon_dir = true;
-      }
-    }
-  
-//was  static uint8_t count = 0;
-//was  delayAndReadIRSpecter(1000, ne);
-//was  beaconGUID(1000 + random(100)); //GUID gap
-  
-}
-*/
 /////////////////////////////////////////////////////////////
 void circularCylon()
 {
@@ -992,8 +978,10 @@ void circularCylon()
     cylon_FGcolor = magenta; // GRB     
     cylon_FGcolor2 = strip.Color(0x3F,0,0x3F); // GRB 
 
-    cylon_BGcolor = strip.Color(0x3F,0,0x3F);
-    cylon_BGcolor2 = strip.Color(0x3F,0x3F,0);
+    //cylon_BGcolor = strip.Color(0x3F,0,0x3F);
+    //cylon_BGcolor2 = strip.Color(0x3F,0x3F,0);
+    cylon_BGcolor = strip.Color(0x00,0,0x7F);
+    cylon_BGcolor2 = strip.Color(0x7F,0x00,0);
     
     neo.fadeto(cylon_current_LEDnum, cylon_FGcolor, 0);  //lednum, Color, FadeTime
     neo.fadeto(NeoLEDs - cylon_current_LEDnum - 1, cylon_FGcolor2, 0);  //lednum, Color, FadeTime
@@ -1022,13 +1010,76 @@ void circularCylon()
     }
 
 }
+
+
+
+uint8_t effect_counterA = 0,
+        prior_counterA = 0;        
+const uint8_t effect_anim[][2] = {
+  {3,8},
+  {4,9},
+  {5,0},
+  {0xFF,0xFF}, //turn all leds off
+  {2,7},
+  {1,6},
+  {0,5},
+ 
+  {0xFF,0xFF}, //turn all leds off
+    
+};
+#define effect_anim_length 8
+void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
+  
+  uint8_t ON = effect_counterA % effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % effect_anim_length;
+  
+  if (effect_anim[ON][0] != 0xFF) {
+    neo.fadeto( effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
+    neo.fadeto( effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
+    neo.wait(period, strip);
+  }
+  else {
+    for (OFF = 0;OFF<NeoLEDs;OFF++) {
+      neo.fadeto( OFF, colorset.getBG(colorsetnum, 0), period >> 1); //fade in half the time 
+      
+    }
+    neo.wait(period << 1, strip);
+    FGcounter ++;
+    BGcounter ++;
+  }
+  /*
+  Serial.print(colorset.getFG(colorsetnum, 0), HEX);
+  Serial.print(" ,");
+  Serial.print(colorset.getBG(colorsetnum), HEX);
+  Serial.print(" ,");
+  Serial.print(effect_counterA % NeoLEDs);
+  Serial.print(" ,");
+  Serial.println(prior_counterA % NeoLEDs);
+  */
+  
+  effect_counterA ++;
+  
+  
+}
+
+
+
+
+
 /////////////////////////////////////////////////////////////
 
+  
+uint8_t brtcnt = 0;
 void loop()
 {
   //brightness test code
-  brightness ++; if (brightness>100 || brightness <0) brightness = 0;
-  circularCylon();
+  brtcnt ++; if (brtcnt>100 || brtcnt <0) brtcnt = 0;
+  irSerial.write_SPECTER(brtcnt);
+  //brightness = brtcnt >> 1;
+      
+  NeoEffect_portal(2, colorset, 200); // 0 is debug colorsetnum
 }
 
 
