@@ -1013,9 +1013,8 @@ void circularCylon()
 
 
 
-uint8_t effect_counterA = 0,
-        prior_counterA = 0;        
-const uint8_t effect_anim[][2] = {
+uint8_t effect_counterA = 0;
+const uint8_t portal_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {3,8},
   {4,9},
   {5,0},
@@ -1023,47 +1022,61 @@ const uint8_t effect_anim[][2] = {
   {2,7},
   {1,6},
   {0,5},
- 
   {0xFF,0xFF}, //turn all leds off
-    
 };
-#define effect_anim_length 8
+
+#define portal_effect_anim_length 8
 void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
   
-  uint8_t ON = effect_counterA % effect_anim_length;
-  uint8_t OFF = (effect_counterA - 1) % effect_anim_length;
+  uint8_t ON = effect_counterA % portal_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % portal_effect_anim_length;
   
-  if (effect_anim[ON][0] != 0xFF) {
-    neo.fadeto( effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
-    neo.fadeto( effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
-    neo.fadeto( effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
-    neo.fadeto( effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
+  if (portal_effect_anim[ON][0] != 0xFF) {
+    neo.fadeto( portal_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( portal_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( portal_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
+    neo.fadeto( portal_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
     neo.wait(period, strip);
   }
   else {
     for (OFF = 0;OFF<NeoLEDs;OFF++) {
       neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time 
-      
     }
     neo.wait(period << 2, strip);
     FGcounter ++;
     BGcounter ++;
   }
-  /*
-  Serial.print(colorset.getFG(colorsetnum, 0), HEX);
-  Serial.print(" ,");
-  Serial.print(colorset.getBG(colorsetnum), HEX);
-  Serial.print(" ,");
-  Serial.print(effect_counterA % NeoLEDs);
-  Serial.print(" ,");
-  Serial.println(prior_counterA % NeoLEDs);
-  */
-  
   effect_counterA ++;
-  
-  
 }
 
+const uint8_t spider_effect_anim[] = 
+  {5,2,7,4,9,6,1,8,3,0};
+#define spider_effect_anim_length 11
+void NeoEffect_spider(uint8_t colorsetnum, Colorsets colorset, int period) {
+  uint8_t ON = effect_counterA % spider_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % spider_effect_anim_length;
+  neo.fadeto( spider_effect_anim[ON], colorset.getFG(colorsetnum, 1) , period);
+  neo.fadeto( spider_effect_anim[OFF], colorset.getBG(colorsetnum, 0) , period >> 1);
+  neo.wait(period, strip);
+  if (spider_effect_anim[ON] == 0) {
+    FGcounter ++;
+    BGcounter ++;
+  }
+  effect_counterA ++;
+}
+
+void NeoEffect_spider2(uint8_t colorsetnum, Colorsets colorset, int period) {
+  
+  uint8_t ON = effect_counterA % spider_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % spider_effect_anim_length;
+  
+  neo.fadeto( spider_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period << 1);
+  neo.fadeto( spider_effect_anim[OFF], colorset.getBG(0 , 0) , period);
+  neo.wait(period << 1, strip);
+  effect_counterA ++;
+  FGcounter ++;
+  BGcounter ++;
+}
 
 
 
@@ -1071,15 +1084,15 @@ void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
 /////////////////////////////////////////////////////////////
 
   
-uint8_t brtcnt = 0;
+const uint8_t current_effect = 0;
+uint8_t colorsetnum = 2;
 void loop()
 {
-  //brightness test code
-  brtcnt ++; if (brtcnt>100 || brtcnt <0) brtcnt = 0;
-  irSerial.write_SPECTER(brtcnt);
-  //brightness = brtcnt >> 1;
-      
-  NeoEffect_portal(2, colorset, 200); // 0 is debug colorsetnum
+  switch (current_effect) {
+  case 0: NeoEffect_portal (colorsetnum, colorset, 200); break;
+  case 1: NeoEffect_spider (colorsetnum, colorset, 100); break;
+  case 2: NeoEffect_spider2(colorsetnum, colorset, 50);  break;
+  }
 }
 
 
