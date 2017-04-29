@@ -11,7 +11,21 @@
 
 #define NeoPIN 7// was 10
 #define NeoLEDs 10 //was 10 //number of addressable LEDs
+<<<<<<< HEAD
 #define NumEffects 10
+=======
+#define modeButton 2
+
+// Variables will change:
+int buttonState;             // the current reading from the input pin
+int lastButtonState = LOW;   // the previous reading from the input pin
+
+// the following variables are unsigned long's because the time, measured in miliseconds,
+// will quickly become a bigger number than can be stored in an int.
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+
+>>>>>>> 0c376ea7c054720c3f785709ebfd5e87b2c4c1de
 uint8_t brightness = 40; //global brightness
 
 byte black[3]  = { 0, 0, 0 };
@@ -921,6 +935,8 @@ Colorsets colorset;
 
 
 void setup() {
+  pinMode(modeButton, INPUT_PULLUP);
+  
   uint32_t  PUFhash_result = PUF_hash();
   strip.begin();
   //meaningless for ours   strip.setBrightness(255);
@@ -970,7 +986,56 @@ void setup() {
   //fix negative elspased time
   const uint8_t center1 = 4;
   const uint8_t center2 = 5;
+<<<<<<< HEAD
   uint32_t magenta = strip.Color(0, 0x3F, 0x3F);//GRB
+=======
+
+
+  uint32_t magenta = strip.Color(0, 0xFF, 0xFF);//GRB
+/*
+void regularCylon() {
+    //joel this is a debug line a may be ignored irSerial.write_SPECTER(0xF0);
+    const  uint32_t cylon_BGcolor = 0x000000; //((uint32_t)r << 16) | ((uint32_t)g << 8) |
+    uint32_t cylon_FGcolor; //RED 25%;
+    uint8_t last_cylon = 0;
+    uint8_t cylon_current_LEDnum = 0;
+    boolean cylon_dir = true;
+    //fix negative elspased time
+    
+    cylon_FGcolor = (uint32_t)(0x40<<8); // GRB
+    
+    neo.fadeto(cylon_current_LEDnum, cylon_FGcolor, 0);  //lednum, Color, FadeTime
+    
+    neo.fadeto(last_cylon, cylon_BGcolor, 500);
+    
+    
+    neo.wait(100, strip);
+    
+    
+    
+    last_cylon = cylon_current_LEDnum;
+    if (cylon_dir) {
+      cylon_current_LEDnum ++;
+      if (cylon_current_LEDnum >= (NeoLEDs - 1)) {
+        cylon_current_LEDnum = NeoLEDs - 1;
+        cylon_dir = false;
+      }
+    }
+    else  {
+      cylon_current_LEDnum --;
+      if (cylon_current_LEDnum <=0) {
+        cylon_current_LEDnum = 0;
+        cylon_dir = true;
+      }
+    }
+  
+//was  static uint8_t count = 0;
+//was  delayAndReadIRSpecter(1000, ne);
+//was  beaconGUID(1000 + random(100)); //GUID gap
+  
+}
+*/
+>>>>>>> 0c376ea7c054720c3f785709ebfd5e87b2c4c1de
 /////////////////////////////////////////////////////////////
 void circularCylon()
 {
@@ -1075,11 +1140,16 @@ uint8_t brtcnt = 0;
 void loop()
 {
   //brightness test code
+<<<<<<< HEAD
   brtcnt ++; if (brtcnt>100 || brtcnt <0) brtcnt = 0;
   irSerial.write_SPECTER(brtcnt);
   //brightness = brtcnt >> 1;
       
   NeoEffect_portal(2, colorset, 200); // 0 is debug colorsetnum
+=======
+  //brightness ++; if (brightness>100 || brightness <0) brightness = 0;
+  circularCylon();
+>>>>>>> 0c376ea7c054720c3f785709ebfd5e87b2c4c1de
 }
 
 
