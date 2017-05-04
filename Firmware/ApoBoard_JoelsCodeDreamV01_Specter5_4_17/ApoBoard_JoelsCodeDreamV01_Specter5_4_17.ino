@@ -8,14 +8,10 @@
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h> // Comment out this line for non-AVR boards (Arduino Due, etc.)
 #include "IRSerial-2014.h"
-#define NumEffects 10
-#include "colorsets.h"
 
 #define NeoPIN 7// was 10
 #define NeoLEDs 10 //was 10 //number of addressable LEDs
-#define Button 2
-
-uint8_t brightness = 10; //global brightness
+#define NumEffects 10
 #define BUTTON_PIN 2
 #define debounce_time 10 // button debounce in ms
 // IR Parameters
@@ -33,6 +29,12 @@ int photopot = A1;
 int colorModeMax = 5;
 int colorMode = 0;
 
+uint8_t brightness = 40; //global brightness
+
+
+uint8_t BGcounter = 0; //global for Background color counter
+uint8_t FGcounter = 0; //global for Foreground color counter
+
 #define PUSHED false
 #define NOT_PUSHED true
 #define WATCH_BUTTON true
@@ -42,6 +44,26 @@ unsigned long previousMicros = 0;
 boolean previousButtonState = NOT_PUSHED;
 boolean debouncedButtonState = NOT_PUSHED;
 boolean bounceState = false;
+
+
+class Colorsets {
+  public:
+    uint32_t colorarray [NumEffects] [8] = {
+      {0xFF0000, 0x00FF00, 0x0000FF, 0x00FFFF,     0, 0, 0, 0}, //coder colorz
+      {0xFF3377, 0x119933, 0x220044, 0x880044,     0x110022, 0x440022, 0x771133, 0x004411}, //coder colorz
+      {0xFF3377, 0x119933, 0x220044, 0x880044,     0x080011, 0x003311, 0x110811, 0x002208}, //coder colorz
+      {0x00FF00, 0x00FF00, 0x00FF00, 0x00FF00,     0x000200, 0x000200, 0x000200, 0x000200} //RED only
+    };
+
+    uint32_t getFG(uint8_t colorsetnum, int8_t FGdelta) {
+      FGcounter += FGdelta;
+      return (colorarray[colorsetnum] [FGcounter % 4]);
+    }
+    uint32_t getBG(uint8_t colorsetnum, int8_t BGdelta) {
+      BGcounter += BGdelta;
+      return (colorarray[colorsetnum] [4 + BGcounter % 4]);
+    }
+};
 
 
 class Neo_event {
@@ -57,7 +79,6 @@ class Neo_event {
     int8_t diff_r [NeoLEDs];
     int8_t diff_g [NeoLEDs];
     int8_t diff_b [NeoLEDs];
-
     uint16_t event_duration [NeoLEDs];
     long unsigned int event_starttime [NeoLEDs];
     uint8_t current_r[NeoLEDs], current_g[NeoLEDs], current_b[NeoLEDs];
@@ -103,6 +124,7 @@ class Neo_event {
       return (uint16_t) (in * intensity) / 100;
     }
 
+    
     ////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////
     boolean wait(int waitfor, Adafruit_NeoPixel &strip ) {
@@ -174,7 +196,7 @@ class Neo_event {
 
 
     void updateButton() {
-      if (bounceState == WATCH_BUTTON) {
+     if (bounceState == WATCH_BUTTON) {
         boolean currentButtonState = digitalRead(BUTTON_PIN);
         if (previousButtonState != currentButtonState) {
           bounceState = IGNORE_BUTTON;
@@ -194,23 +216,60 @@ class Neo_event {
 };
 
 
-
 //-------------------------------------------------------------------------------------------------
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NeoLEDs, NeoPIN, NEO_GRB + NEO_KHZ800);
 
+// Main morse LED
+#define LED_PIN 3
+
+
+
+
+//BEGIN GLOBAL VARS:
+//We are getting tight on space so I'm packing variables as tightly as I can
+struct _PackedVars {
+  /*  uint32_t InSerialEpic : 1;
+    uint32_t AwaitingSerialAnswer: 1;
+    uint32_t DisplayAnswer:1;
+    uint32_t LEDMode : 4; //what start up mode are we need (animation)
+    uint32_t Silent : 1;
+    uint32_t LINE1Loc : 6;
+    uint32_t AnswerPos : 4;
+    uint32_t hasSilk1 : 1;
+    uint32_t hasSilk2 : 1;
+    uint32_t hasSilk3 : 1;
+    uint32_t isContestRunner : 1;
+  */
+  uint32_t AwaitingSerialAnswer: 1;
+  uint32_t DisplayAnswer: 1;
+  uint32_t LEDMode : 4; //what start up mode are we need (animation)
+  uint32_t swapKeyAndGUID : 1;
+  uint32_t modeInit : 1;
+} PackedVars;
+
+uint16_t KEY[4];
+char GUID[9] = "201005xx";
+unsigned long nextBeacon;
+#define OLED_RESET 4
+//DarkNetDisplay Display(OLED_RESET);
+//END GLOBAL VARS
+
+
+
+
 #define ENDLINE F("\n")
 
-//experimental: try to get unique identifier from uninitiailized RAM
+//experimental
 uint32_t PUF_hash()
 {
   uint8_t const * p;
   uint8_t i;
   uint16_t hash = 0;
-
+  
   uint8_t hash0 = 0;
   uint8_t hash1 = 0;
-
+  
   p = (const uint8_t *)(0x8000);//was (8192 - 256);
   i = 0;
   do
@@ -223,13 +282,14 @@ uint32_t PUF_hash()
   }
   while ( i != 0 );
   hash = hash0 + (hash1 << 8);
-
+  
   Serial.begin(115200);
-  Serial.println(hash0, HEX);
-  Serial.println(hash1, HEX);
-
+  Serial.println(hash0,HEX);
+  Serial.println(hash1,HEX);
+  
   return (hash);
 }
+
 
 
 // Morse Code constants
@@ -301,6 +361,151 @@ void readContestRunnerKeyAndGUID() {
   KEY[3] = (EEPROM.read(UBER_CRYTPO_CONTEST_RUNNER_ADDR + 6) << 8) + EEPROM.read(UBER_CRYTPO_CONTEST_RUNNER_ADDR + 7);
 #endif
 }
+
+/*
+  void readInGUIDAndKey() {
+  for (char ndx = 0; ndx < 8; ndx++) {
+    GUID[ndx] = EEPROM.read(GUID_ADDR + ndx);
+  }
+  GUID[8] = 0;
+  // Yes, this is big endian. I don't want to have to byte-swap
+  // when building the EEPROM file from text strings.
+  KEY[0] = (EEPROM.read(KEY_ADDR + 0) << 8) + EEPROM.read(KEY_ADDR + 1);
+  KEY[1] = (EEPROM.read(KEY_ADDR + 2) << 8) + EEPROM.read(KEY_ADDR + 3);
+  KEY[2] = (EEPROM.read(KEY_ADDR + 4) << 8) + EEPROM.read(KEY_ADDR + 5);
+  KEY[3] = (EEPROM.read(KEY_ADDR + 6) << 8) + EEPROM.read(KEY_ADDR + 7);
+  }
+*/
+
+/* This is the workhorse function.  Whatever you do elsewhere,
+   When you're not working you need to call this so it looks
+   for IR data and acts on it if received.  The Rx ISR has a
+   64 byte buffer, so you need to call this at least once every
+   (1 sec/300 symbols * 10 symbos/1 byte * 64 byte buffer = )
+   2.13 seconds before you risk overflowing the buffer, but I'd
+   make sure you call it more often than that.  Basically,
+   whenever you are pausing, use this instead of delay().
+
+   Like delay(), but looks for IR serial data while waiting.
+   Delays for pauseFor milliseconds.  Tight koops around looking
+   for serial data.  Also triggers a USB dump if the button is
+   pressed.
+
+   IMPORTANT: If either a full Serial frame is received, or the
+   button is pressed, then delayAndReadIR() can delay for much
+   longer than pauseFor milliseconds as it either handles the USB,
+   or handles a received IR signal.
+*/
+
+// Sends our GUID out over the IR.  Call this "often"
+// when it's convenient in your animation. It'll handle
+// dealing with the timing, whether it's been long enough
+// to send another beacon.
+void beaconGUID(int timegap) {
+  if (millis() >= nextBeacon) {
+    /*if (1 == PackedVars.swapKeyAndGUID) {
+      readContestRunnerKeyAndGUID();
+      }*/
+    // Add a little randomness so devices don't get sync'd up.
+    nextBeacon = millis() + timegap;
+    uint8_t r = random(64);
+    uint8_t g = random(64);
+    uint8_t b = random(64);
+    char str[9];
+    sprintf(str, "%02x", r);
+    sprintf(str + 2, "%02x", g);
+    sprintf(str + 4, "%02x", b);
+    sprintf(str + 6, "xx");
+    strip.setPixelColor(0, strip.Color(r, g, b));
+    strip.show();
+
+
+    irSerial.print(F("0x"));
+    irSerial.println(str);
+    Serial.print("\n");
+    Serial.print("Beacon:");
+    Serial.println(str);
+  }
+}
+
+/*
+  // TEA (known to be broken) with all word sizes cut in half (64 bit key, 32 bit blocks)
+  // Yes, I'm inviting people to hack this if they want. :-)
+  // TODO: Since we're giving up on backward compatability in 2014, should we increase this size?
+  void encrypt(uint16_t *v) {
+  uint16_t v0 = v[0], v1 = v[1], sum = 0, i;     // set up
+  uint16_t delta = 0x9e37;                       // a key schedule constant
+  for (i = 0; i < 32; i++) {                     // basic cycle start
+    sum += delta;
+    v0 += ((v1 << 4) + KEY[0]) ^ (v1 + sum) ^ ((v1 >> 5) + KEY[1]);
+    v1 += ((v0 << 4) + KEY[2]) ^ (v0 + sum) ^ ((v0 >> 5) + KEY[3]);
+  }                                              // end cycle
+  v[0] = v0; v[1] = v1;
+  }
+
+  uint16_t getNumMsgs() {
+  return (EEPROM.read(MSG_COUNT_ADDR) << 8) + EEPROM.read(MSG_COUNT_ADDR + 1);
+  }
+*/
+/*
+  void writeNumMsgs(uint16_t numMsgs) {
+  EEPROM.write(MSG_COUNT_ADDR, numMsgs / 256);
+  EEPROM.write(MSG_COUNT_ADDR + 1, numMsgs % 256);
+  }
+
+  bool isNumMsgsValid(uint16_t numMsgs) {
+  return numMsgs < MAX_NUM_MSGS;
+  }
+
+  // Writes a pairing code to EEPROM
+  int writeEEPROM(unsigned char *guid, uint8_t *msg) {
+  char msgStr[9];
+  intToStr(msg, msgStr);
+
+  uint16_t numMsgs = getNumMsgs();
+  if (!isNumMsgsValid(numMsgs)) {
+    Serial.print(F("numMsgs not valid. Setting to 0. Ignore if this is your first pairing."));
+    Serial.println(numMsgs);
+    // Assume this is the first read of this chip and initialize
+    numMsgs = 0;
+  }
+
+  int msgAddr;
+  unsigned char ndx;
+  for (msgAddr = 0; msgAddr < numMsgs * TOTAL_STORAGE_SIZE_MSG; msgAddr += TOTAL_STORAGE_SIZE_MSG) {
+    for (ndx = 0; ndx < 8; ndx++) {
+      if (guid[ndx] != EEPROM.read(msgAddr + ndx))
+        break;
+    }
+    if (ndx == 8) {
+      // Found a match.  Rewrite in case it was wrong before
+      break;
+    }
+  }
+
+  if (ndx != 8) {
+    // FIXME This doens't properly stop at 60. It wraps around.
+    if (numMsgs > 0 && !isNumMsgsValid(numMsgs)) {
+      // The DB is full.  Don't actually create a new entry.
+      for (ndx = 0; ndx < 16; ndx++) {
+        // Randy Quaid is my hero.
+        EEPROM.write(msgAddr + ndx, "SHITTERS FULL..."[ndx]);
+      }
+      return msgAddr;
+    }
+    else {
+      numMsgs++;
+    }
+  }
+
+  for (ndx = 0; ndx < 8; ndx++) {
+    EEPROM.write(msgAddr + ndx, guid[ndx]);
+    EEPROM.write(msgAddr + 8 + ndx, msgStr[ndx]);
+  }
+  writeNumMsgs(numMsgs);
+  return msgAddr;
+  }
+*/
 
 // This is our receive buffer, for data we pull out of the
 // IRSerial library.  This is _NOT_ the buffer the IRSerial
@@ -435,6 +640,96 @@ unsigned char readWordFromIR() {
   }
   return 0;
 }
+
+
+/*
+  int weAreAlice() {
+  backlight_patched(BACKLIGHT_1, HIGH);
+  // Read the 0y from Bob and process it.
+  uint8_t aliceEnc[4] = {0, 0, 0, 0};
+  uint8_t bob[4] = {0, 0, 0, 0};
+  unsigned char bobGUID[8];
+  if (!readWordFromBuf(aliceEnc)) {
+    Serial.println(F("Error reading 0y from rxBuf."));
+    return -1;
+  }
+  backlight_patched(BACKLIGHT_2, HIGH);
+
+  // Right on the heels is 0a, Bob's GUID
+  if (!readWordFromIR() || rxBufNdx(-11) != 'a') {
+    Serial.println(F("Error reading 0a"));
+    return -1;
+  }
+  backlight_patched(BACKLIGHT_3, HIGH);
+
+  if (!readWordFromBuf(bob, bobGUID)) {
+    Serial.println(F("Error reading 0a from rxBuf"));
+    return -1;
+  }
+
+  uint8_t bobEnc[4];
+  // Nasty pointer math to convert to the right format for encryption.
+  // TODO this could almost certainly be done cleaner.
+   (uint32_t*)bobEnc = *(uint32_t*)bob;
+  encrypt((uint16_t*)bobEnc);
+  delay(100);  // Give Bob some time to recover from his send
+  irSerial.print(F("0b"));
+  writeWord(bobEnc);
+  backlight_patched(BACKLIGHT_4, HIGH);
+
+  // Alright!  We've got everything we need!  Build a message
+   (uint32_t*)bobEnc ^= *(uint32_t*)aliceEnc;
+  int retVal =  writeEEPROM(bobGUID, bobEnc);
+
+  if (1 == PackedVars.swapKeyAndGUID) {
+    PackedVars.swapKeyAndGUID = 0;
+    readInGUIDAndKey();
+  }
+  return retVal;
+  }
+
+  int weAreBob() {
+  // Read the 0x from Alice and process it.
+  backlight_patched(BACKLIGHT_4, HIGH);
+  uint8_t alice[4] = {0, 0, 0, 0};
+  unsigned char aliceGUID[8];
+  if (!readWordFromBuf(alice, aliceGUID)) {
+    Serial.println(F("Error reading 0x from rxBuf."));
+    return -1;
+  }
+  backlight_patched(BACKLIGHT_3, HIGH);
+
+  uint8_t aliceEnc[4];
+   (uint32_t*)aliceEnc = *(uint32_t*)alice;
+  encrypt((uint16_t*)aliceEnc);
+
+  // Transmit response, plus my GUID
+  delay(100);  // Sleep a little bit to let the other side clear out their buffer. ??
+  irSerial.print(F("0y"));
+  writeWord(aliceEnc);
+  delay(100);  // Give the other side a bit of time to process.
+  irSerial.print(F("0a"));
+  irSerial.println(GUID);
+
+  // Look for a response from Alice
+  if (!readWordFromIR() || rxBufNdx(-11) != 'b') {
+    Serial.println(F("Error reading 0b"));
+    return -1;
+  }
+  backlight_patched(BACKLIGHT_2, HIGH);
+
+  uint8_t bobEnc[4] = {0, 0, 0, 0};
+  if (!readWordFromBuf(bobEnc)) {
+    Serial.println(F("Error reading 0b from rxBuf."));
+    return -1;
+  }
+  backlight_patched(BACKLIGHT_1, HIGH);
+
+  // Alright!  We've got everything we need!  Build a message
+   (uint32_t*)bobEnc ^= *(uint32_t*)aliceEnc;
+  return writeEEPROM(aliceGUID, bobEnc);
+  }
+*/
 void clearRxBuf() {
   for (int ndx = 0; ndx < RX_BUF_SIZE; ndx++)
     rxBuf[ndx] = '-';
@@ -551,44 +846,8 @@ uint8_t convertchartobyte(char cur) {
   }
 
 */
-/*
-  void flashRandom(int wait, uint8_t howmany) {
 
-  for (uint16_t i = 0; i < howmany; i++) {
-    // pick a random favorite color!
-    int c = random(FAVCOLORS);
-    int red = ColorSets[c][0];
-    int green = ColorSets[c][1];
-    int blue = ColorSets[c][2];
 
-    // get a random pixel from the list
-    int j = random(strip.numPixels());
-
-    // now we will 'fade' it in 5 steps
-    for (int x = 0; x < 5; x++) {
-      int r = red * (x + 1); r /= 5;
-      int g = green * (x + 1); g /= 5;
-      int b = blue * (x + 1); b /= 5;
-
-      strip.setPixelColor(j, strip.Color(r, g, b));
-      strip.show();
-      delay(wait);
-    }
-    // & fade out in 5 steps
-    for (int x = 5; x >= 0; x--) {
-      int r = red * x; r /= 5;
-      int g = green * x; g /= 5;
-      int b = blue * x; b /= 5;
-
-      strip.setPixelColor(j, strip.Color(r, g, b));
-      strip.show();
-      delay(wait);
-    }
-  }
-  // NeoLEDs will be off when done (they are faded to 0)
-  }
-
-*/
 
 
 
@@ -624,12 +883,8 @@ void delayAndReadIRSpecter(int pauseFor, Neo_event &ne) {
 Neo_event neo;
 Colorsets colorset;
 
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-void setup()
-{
+
+void setup() {
   uint32_t  PUFhash_result = PUF_hash();
   strip.begin();
   strip.setBrightness(0xff);
@@ -637,6 +892,7 @@ void setup()
     strip.setPixelColor(kill, 0);
   }
   strip.show(); // Initialize all pixels to 'off'
+
 
   Serial.begin(SERIAL_BAUD);
   Serial.print("\n");
@@ -650,17 +906,71 @@ void setup()
   digitalWrite(IR_TX, LOW); // For some reason, the TX line starts high and wastes some battery.
   pinMode(IR_RX, INPUT_PULLUP);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  delay(200);  // Reset "debounce"
+
+  // Swetup the IR buffers and timers.
+  nextBeacon = millis();
+  clearRxBuf();
 
   Serial.println("Starting kernel loop");
 
 }
-/////////////////////////////////////////////////////////////
-/////////////////               /////////////////////////////
-///////////////// E f f e c t s /////////////////////////////
-/////////////////               /////////////////////////////
-/////////////////////////////////////////////////////////////
 
-uint8_t effect_counterA = 0; //global effect_counter for all animations
+
+uint32_t cylon_BGcolor = 0x000000; //((uint32_t)r << 16) | ((uint32_t)g << 8) |
+uint32_t cylon_BGcolor2;
+uint32_t cylon_FGcolor; //RED 25%;
+uint32_t cylon_FGcolor2;
+uint8_t last_cylon = 0;
+uint8_t cylon_current_LEDnum = 4;
+boolean cylon_dir = true;
+//fix negative elspased time
+const uint8_t center1 = 4;
+const uint8_t center2 = 5;
+uint32_t magenta = strip.Color(0, 0x3F, 0x3F);//GRB
+/////////////////////////////////////////////////////////////
+void circularCylon()
+{
+
+  cylon_FGcolor = magenta; // GRB
+  cylon_FGcolor2 = strip.Color(0x3F, 0, 0x3F); // GRB
+
+  //cylon_BGcolor = strip.Color(0x3F,0,0x3F);
+  //cylon_BGcolor2 = strip.Color(0x3F,0x3F,0);
+  cylon_BGcolor = strip.Color(0x00, 0, 0x7F);
+  cylon_BGcolor2 = strip.Color(0x7F, 0x00, 0);
+
+  neo.fadeto(cylon_current_LEDnum, cylon_FGcolor, 0);  //lednum, Color, FadeTime
+  neo.fadeto(NeoLEDs - cylon_current_LEDnum - 1, cylon_FGcolor2, 0);  //lednum, Color, FadeTime
+
+  neo.fadeto(last_cylon, cylon_BGcolor, 200);
+  neo.fadeto(NeoLEDs - last_cylon - 1, cylon_BGcolor2, 200);
+
+  neo.wait(100, strip);
+
+
+  //bounce code
+  last_cylon = cylon_current_LEDnum;
+  if (cylon_dir) {
+    cylon_current_LEDnum ++;
+    if (cylon_current_LEDnum > (center1)) {
+      cylon_current_LEDnum = center1;
+      cylon_dir = false;
+    }
+  }
+  else  {
+    cylon_current_LEDnum --;
+    if (cylon_current_LEDnum <= 0) {
+      cylon_current_LEDnum = 0;
+      cylon_dir = true;
+    }
+  }
+
+}
+
+
+
+uint8_t effect_counterA = 0;
 const uint8_t portal_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {3, 8},
   {4, 9},
@@ -673,26 +983,20 @@ const uint8_t portal_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), 
 };
 
 #define portal_effect_anim_length 8
-
 void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
 
   uint8_t ON = effect_counterA % portal_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % portal_effect_anim_length;
 
-  if (portal_effect_anim[ON][0] != 0xFF)
-  {
+  if (portal_effect_anim[ON][0] != 0xFF) {
     neo.fadeto( portal_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
     neo.fadeto( portal_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
-    if ( portal_effect_anim[OFF][0] != 0xFF ) {
-      neo.fadeto( portal_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
-      neo.fadeto( portal_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
-    }
+    neo.fadeto( portal_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
+    neo.fadeto( portal_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
     neo.wait(period, strip);
   }
-  else
-  {
-    for (OFF = 0; OFF < NeoLEDs; OFF++)
-    {
+  else {
+    for (OFF = 0; OFF < NeoLEDs; OFF++) {
       neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time
     }
     neo.wait(period << 2, strip);
@@ -701,18 +1005,13 @@ void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
   }
   effect_counterA ++;
 }
-////////////////////////////////////////////////////////////////////////////////
+
 const uint8_t spider_effect_anim[] =
 {5, 2, 7, 4, 9, 6, 1, 8, 3, 0};
-
-
 #define spider_effect_anim_length 11
-
-void NeoEffect_spider(uint8_t colorsetnum, Colorsets colorset, int period)
-{
+void NeoEffect_spider(uint8_t colorsetnum, Colorsets colorset, int period) {
   uint8_t ON = effect_counterA % spider_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % spider_effect_anim_length;
-
   neo.fadeto( spider_effect_anim[ON], colorset.getFG(colorsetnum, 1) , period);
   neo.fadeto( spider_effect_anim[OFF], colorset.getBG(colorsetnum, 0) , period >> 1);
   neo.wait(period, strip);
@@ -722,7 +1021,7 @@ void NeoEffect_spider(uint8_t colorsetnum, Colorsets colorset, int period)
   }
   effect_counterA ++;
 }
-////////////////////////////////////////////////////////////////////////////////
+
 void NeoEffect_spider2(uint8_t colorsetnum, Colorsets colorset, int period) {
 
   uint8_t ON = effect_counterA % spider_effect_anim_length;
@@ -735,7 +1034,7 @@ void NeoEffect_spider2(uint8_t colorsetnum, Colorsets colorset, int period) {
   FGcounter ++;
   BGcounter ++;
 }
-////////////////////////////////////////////////////////////////////////////////
+
 const uint8_t cylon_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {2, 3},
   {1, 4},
@@ -753,7 +1052,6 @@ const uint8_t cylon_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), i
 };
 
 #define cylon_effect_anim_length 12
-
 void NeoEffect_cylon(uint8_t colorsetnum, Colorsets colorset, int period) {
 
   uint8_t ON = effect_counterA % cylon_effect_anim_length;
@@ -762,10 +1060,8 @@ void NeoEffect_cylon(uint8_t colorsetnum, Colorsets colorset, int period) {
   if (cylon_effect_anim[ON][0] != 0xFF) {
     neo.fadeto( cylon_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
     neo.fadeto( cylon_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
-    if (cylon_effect_anim[OFF][0] != 0xFF) {
-      neo.fadeto( cylon_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
-      neo.fadeto( cylon_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
-    }
+    neo.fadeto( cylon_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
+    neo.fadeto( cylon_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
     neo.wait(period, strip);
   }
   else {
@@ -778,15 +1074,7 @@ void NeoEffect_cylon(uint8_t colorsetnum, Colorsets colorset, int period) {
   }
   effect_counterA ++;
 }
-////////////////////////////////////////////////////////////////////////////////
-/*       5
-      4     6
-   3           7
-   2           8
-      1     9
-         0
 
-*/
 const uint8_t cylon2_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {2, 3},
   {1, 4},
@@ -805,162 +1093,44 @@ void NeoEffect_cylon2(uint8_t colorsetnum, Colorsets colorset, int period) {
   uint8_t ON = effect_counterA % cylon2_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % cylon2_effect_anim_length;
 
-  neo.fadeto( cylon2_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
-  neo.fadeto( cylon2_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
-  neo.fadeto( cylon2_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
-  neo.fadeto( cylon2_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
-  neo.wait(period, strip);
+    neo.fadeto( cylon2_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( cylon2_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( cylon2_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
+    neo.fadeto( cylon2_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
+    neo.wait(period, strip);
   if (ON == 0 || ON == 5)
     FGcounter ++;
-  if (ON == 5)
+  if (ON == 5)  
     BGcounter ++;
   effect_counterA ++;
 }
-////////////////////////////////////////////////////////////////////////////////
-const uint8_t waterfall_effect_anim[][2] = {};
-
-#define waterfall_effect_anim_length 8
-
-
-void NeoEffect_waterfall(uint8_t colorsetnum, Colorsets colorset, int period)
-{
-  uint8_t ON = effect_counterA % waterfall_effect_anim_length;
-  uint8_t OFF = (effect_counterA - 1) % waterfall_effect_anim_length;
-}
-////////////////////////////////////////////////////////////////////////////////
-/*       5
-      4     6
-   3           7
-   2           8
-      1     9
-         0
-*/
-const uint8_t zigzag_effect_anim[] = {2, 4, 0, 6, 8, 7, 9, 5, 1, 3};
-
-#define zigzag_effect_anim_length 10
-
-void NeoEffect_zigzag(uint8_t colorsetnum, Colorsets colorset, int period)
-{
-  uint8_t ON = effect_counterA % zigzag_effect_anim_length;
-  uint8_t OFF = (effect_counterA - 1) % zigzag_effect_anim_length;
-
-
-  neo.fadeto( zigzag_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
-  neo.fadeto( zigzag_effect_anim[OFF], colorset.getBG(colorsetnum , 0) , period << 1);
-  neo.wait(period, strip);
-
-  if (ON == 0)
-  {
-    FGcounter ++;
-    BGcounter ++;
-  }
-
-
-  effect_counterA ++;
-}
-////////////////////////////////////////////////////////////////////////////////
-/*       5
-     4     6
-  3           7
-  2           8
-     1     9
-        0
-*/
-const uint8_t infinity_effect_anim[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 5, 4, 3, 2, 1, 0, 9, 8, 7, 6, 5};
-
-#define infinity_effect_anim_length 22
-
-void NeoEffect_infinity(uint8_t colorsetnum, Colorsets colorset, int period)
-{
-  uint8_t ON = effect_counterA % infinity_effect_anim_length;
-  uint8_t OFF = (effect_counterA - 1) % infinity_effect_anim_length;
-
-
-  neo.fadeto( infinity_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
-  neo.fadeto( infinity_effect_anim[OFF], colorset.getBG(colorsetnum , 0) , period << 1);
-  neo.wait(period, strip);
-
-  if (ON == 0)
-  {
-    FGcounter ++;
-    BGcounter ++;
-  }
-
-
-  effect_counterA ++;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*       5
-     4     6
-  3           7
-  2           8
-     1     9
-        0
-*/
-const uint8_t NumSmileyFaces = 5;
-const bool smileyFaces[][10] = {
-  {1, 1, 1, 0, 1, 0, 1, 0, 1, 1}, // basic smile and two eyes
-  {1, 1, 1, 0, 0, 0, 0, 0, 1, 1}, // no eyes, just smile
-  {1, 1, 1, 0, 0, 0, 1, 0, 1, 1}, // smile and left wink
-  {1, 1, 1, 0, 1, 0, 0, 0, 1, 1}, // smile and right wink
-  {1, 1, 1, 0, 0, 0, 0, 0, 1, 1}, // no eyes, just smile
-  {1, 0, 0, 0, 1, 0, 1, 0 ,0, 0} // small mouth, two eyes
-};
-uint8_t smiley_rotation = 0;
-void NeoEffect_smiley(uint8_t colorsetnum, Colorsets colorset, int period) {
-  uint8_t face = 0;
-  uint8_t r = random(0x100);
-  if ( r > 0xF0 )
-    face = random(NumSmileyFaces - 1) + 1;
-  if ( r < 0x04 )
-    smiley_rotation = random(2) + 9;
-
-  if ( r == 0x80) {
-    FGcounter ++;
-    BGcounter ++;
-  }
-  draw_smiley(face, smiley_rotation, colorsetnum, colorset, period);
-  strip.setBrightness((r % 0x10) + 0x30);
-  neo.wait(period, strip);
-  effect_counterA ++;
-  //smiley_rotation ++;
-}
-
-void draw_smiley(uint8_t LEDimg, uint8_t rot, uint8_t colorsetnum, Colorsets colorset, int period) {
-  for (uint8_t i = 0; i < 10; i++) {
-    if (smileyFaces[LEDimg][i] == 1) neo.fadeto( (i + rot) % NeoLEDs, colorset.getFG(colorsetnum, 0) , period >> 4);
-    else neo.fadeto( (i + rot) % NeoLEDs , colorset.getBG(0, 0) , period);
-  }
-}
 
 
 
 
+/////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
+
 uint8_t current_effect = 0;
+const uint8_t numeffects = 5;
 uint8_t colorsetnum = 2;
-
 void loop()
 {
   switch (current_effect) {
-    case 0: NeoEffect_smiley (colorsetnum, colorset, 300); break;
+    case 0: NeoEffect_portal (colorsetnum, colorset, 200); break;
     case 1: NeoEffect_spider (colorsetnum, colorset, 100); break;
-    case 2: NeoEffect_spider2(colorsetnum, colorset, 10);  break;
+    case 2: NeoEffect_spider2(colorsetnum, colorset, 50);  break;
     case 3: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
     case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
-    case 5: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
-    case 6: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
-    case 7: NeoEffect_portal (colorsetnum, colorset, 200); break;
   }
-  neo.wait(10, strip); //dummy wait to set debuncedButtonState
   if (!debouncedButtonState) {
     debouncedButtonState = 1;
-    current_effect = (current_effect + 1) % NumEffects;
-    Serial.print("Effect = ");
-    Serial.print("\t");
-    Serial.println(current_effect);
+    current_effect = (current_effect + 1) % numeffects;
   }
+  Serial.print("Effect = ");
+  Serial.print("\t");
+  Serial.println(current_effect);
 }
+
+
 

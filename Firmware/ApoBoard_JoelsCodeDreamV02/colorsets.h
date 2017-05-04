@@ -3,8 +3,6 @@
  * 
  */
 
-#define NumEffects 10
-
 #define BRIGHT_WHITE      0xFFFFFF
 #define DIM_WHITE         0x555555
 

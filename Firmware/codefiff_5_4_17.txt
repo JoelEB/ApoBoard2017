@@ -1,0 +1,973 @@
+10a11
+> #include "colorsets.h"
+14,21c15
+< #define NumEffects 10
+< #define BUTTON_PIN 2
+< #define debounce_time 10 // button debounce in ms
+< // IR Parameters
+< #define IR_RX 8 //was 8
+< #define IR_TX 9 //was 9
+< #define IR_BAUD 300
+< IRSerial irSerial(IR_RX, IR_TX, false, true);
+---
+> #define Button 2
+23c17
+< #define SERIAL_BAUD 115200
+---
+> uint8_t brightness = 10; //global brightness
+25,46d18
+< /////////// GLOBALS /////////////////
+< bool button_shadow = false;
+< int button = BUTTON_PIN;
+< int photopot = A1;
+< int colorModeMax = 5;
+< int colorMode = 0;
+< 
+< uint8_t brightness = 40; //global brightness
+< 
+< 
+< uint8_t BGcounter = 0; //global for Background color counter
+< uint8_t FGcounter = 0; //global for Foreground color counter
+< 
+< #define PUSHED false
+< #define NOT_PUSHED true
+< #define WATCH_BUTTON true
+< #define IGNORE_BUTTON false
+< const int buttonWaitInterval = 6000;
+< unsigned long previousMicros = 0;
+< boolean previousButtonState = NOT_PUSHED;
+< boolean debouncedButtonState = NOT_PUSHED;
+< boolean bounceState = false;
+49,66d20
+< class Colorsets {
+<   public:
+<     uint32_t colorarray [NumEffects] [8] = {
+<       {0xFF0000, 0x00FF00, 0x0000FF, 0x00FFFF,     0, 0, 0, 0}, //coder colorz
+<       {0xFF3377, 0x119933, 0x220044, 0x880044,     0x110022, 0x440022, 0x771133, 0x004411}, //coder colorz
+<       {0xFF3377, 0x119933, 0x220044, 0x880044,     0x080011, 0x003311, 0x110811, 0x002208}, //coder colorz
+<       {0x00FF00, 0x00FF00, 0x00FF00, 0x00FF00,     0x000200, 0x000200, 0x000200, 0x000200} //RED only
+<     };
+< 
+<     uint32_t getFG(uint8_t colorsetnum, int8_t FGdelta) {
+<       FGcounter += FGdelta;
+<       return (colorarray[colorsetnum] [FGcounter % 4]);
+<     }
+<     uint32_t getBG(uint8_t colorsetnum, int8_t BGdelta) {
+<       BGcounter += BGdelta;
+<       return (colorarray[colorsetnum] [4 + BGcounter % 4]);
+<     }
+< };
+67a22
+>   
+71,86c26,42
+< 
+<     int8_t event_type [NeoLEDs];
+<     uint8_t init_r [NeoLEDs];
+<     uint8_t init_g [NeoLEDs];
+<     uint8_t init_b [NeoLEDs];
+<     uint8_t end_r [NeoLEDs];
+<     uint8_t end_g [NeoLEDs];
+<     uint8_t end_b [NeoLEDs];
+<     int8_t diff_r [NeoLEDs];
+<     int8_t diff_g [NeoLEDs];
+<     int8_t diff_b [NeoLEDs];
+<     uint16_t event_duration [NeoLEDs];
+<     long unsigned int event_starttime [NeoLEDs];
+<     uint8_t current_r[NeoLEDs], current_g[NeoLEDs], current_b[NeoLEDs];
+< 
+<     static const int8_t
+---
+>   
+>   int8_t event_type [NeoLEDs];
+>   uint8_t init_r [NeoLEDs];
+>   uint8_t init_g [NeoLEDs];
+>   uint8_t init_b [NeoLEDs];
+>   uint8_t end_r [NeoLEDs];
+>   uint8_t end_g [NeoLEDs];
+>   uint8_t end_b [NeoLEDs];
+>   int8_t diff_r [NeoLEDs];
+>   int8_t diff_g [NeoLEDs];
+>   int8_t diff_b [NeoLEDs];
+>   
+>   uint16_t event_duration [NeoLEDs];
+>   long unsigned int event_starttime [NeoLEDs];
+>   uint8_t current_r[NeoLEDs], current_g[NeoLEDs], current_b[NeoLEDs];
+>       
+>   static const int8_t 
+89a46,76
+>   
+>   boolean setcolor(uint8_t LEDnum, uint32_t Color) {
+>     LEDnum %= NeoLEDs;
+>     event_type[LEDnum] = event_setcolor;
+>     init_g[LEDnum] = (Color >> 17) & 0x7F;
+>     init_r[LEDnum] = (Color >> 9) & 0x7F;
+>     init_b[LEDnum] = (Color >> 1) & 0x7F;
+>   }
+> 
+>   boolean fadeto(uint8_t LEDnum, uint32_t Color, uint16_t duration) {
+>     LEDnum %= NeoLEDs;
+>     event_type[LEDnum] = event_fadeto;
+>     end_g[LEDnum] = (Color >> 17) & 0x7F;
+>     end_r[LEDnum] = (Color >> 9) & 0x7F;
+>     end_b[LEDnum] = (Color >> 1) & 0x7F;
+>     init_r[LEDnum] = current_r[LEDnum];
+>     init_g[LEDnum] = current_g[LEDnum];
+>     init_b[LEDnum] = current_b[LEDnum];
+>     
+>     diff_g[LEDnum] = end_g[LEDnum] - init_g[LEDnum];
+>     diff_r[LEDnum] = end_r[LEDnum] - init_r[LEDnum];
+>     diff_b[LEDnum] = end_b[LEDnum] - init_b[LEDnum];
+>     /*Serial.print("fadeto: [");
+>     Serial.print(LEDnum);
+>     Serial.print("] ");
+>     Serial.print(init_g[LEDnum],HEX);
+>     Serial.print(" -> ");
+>     Serial.println(end_g[LEDnum],HEX);*/
+>     event_starttime[LEDnum] = millis();  
+>     event_duration[LEDnum] = duration;
+>   }
+91,126c78
+<     boolean setcolor(uint8_t LEDnum, uint32_t Color) {
+<       LEDnum %= NeoLEDs;
+<       event_type[LEDnum] = event_setcolor;
+<       init_g[LEDnum] = (Color >> 17) & 0x7F;
+<       init_r[LEDnum] = (Color >> 9) & 0x7F;
+<       init_b[LEDnum] = (Color >> 1) & 0x7F;
+<     }
+< 
+<     boolean fadeto(uint8_t LEDnum, uint32_t Color, uint16_t duration) {
+<       LEDnum %= NeoLEDs;
+<       event_type[LEDnum] = event_fadeto;
+<       end_g[LEDnum] = (Color >> 17) & 0x7F;
+<       end_r[LEDnum] = (Color >> 9) & 0x7F;
+<       end_b[LEDnum] = (Color >> 1) & 0x7F;
+<       init_r[LEDnum] = current_r[LEDnum];
+<       init_g[LEDnum] = current_g[LEDnum];
+<       init_b[LEDnum] = current_b[LEDnum];
+< 
+<       diff_g[LEDnum] = end_g[LEDnum] - init_g[LEDnum];
+<       diff_r[LEDnum] = end_r[LEDnum] - init_r[LEDnum];
+<       diff_b[LEDnum] = end_b[LEDnum] - init_b[LEDnum];
+<       /*Serial.print("fadeto: [");
+<         Serial.print(LEDnum);
+<         Serial.print("] ");
+<         Serial.print(init_g[LEDnum],HEX);
+<         Serial.print(" -> ");
+<         Serial.println(end_g[LEDnum],HEX);*/
+<       event_starttime[LEDnum] = millis();
+<       event_duration[LEDnum] = duration;
+<     }
+< 
+<     uint8_t applybrightness(uint8_t in, uint8_t intensity) {
+< 
+<       return (uint16_t) (in * intensity) / 100;
+<     }
+< 
+---
+>   uint8_t applybrightness(uint8_t in,uint8_t intensity) {
+128,140c80,81
+<     ////////////////////////////////////////////////////////
+<     ////////////////////////////////////////////////////////
+<     boolean wait(int waitfor, Adafruit_NeoPixel &strip ) {
+<       waitfor = waitfor > 0 ? waitfor : 0;
+<       uint32_t returnTime = millis() + waitfor;
+<       uint32_t out_color;
+<       for (int i = 0; i < NeoLEDs; i++) {
+<         switch (event_type[i]) {
+<           case event_setcolor :
+<             event_type[i] = 0;
+<             out_color = (((uint32_t) init_g[i]) << 16) + (((uint16_t) init_r[i]) << 8) + init_b[i];
+<             strip.setPixelColor(i, out_color) ;
+<             break;
+---
+>     return (uint16_t) (in * intensity) / 100;
+>   }
+142,145c83,100
+<           case event_fadeto :
+<             event_type[i] = -event_fadeto;
+<             break;
+<         }
+---
+>   boolean wait(int waitfor, Adafruit_NeoPixel &strip) {
+>     waitfor = waitfor>0?waitfor:0;
+>     uint32_t returnTime = millis() + waitfor;
+>     uint32_t out_color;
+>     for (int i = 0; i< NeoLEDs; i++) {
+>       //Serial.println(event_type[i] == event_setcolor);
+>       switch (event_type[i]) {
+>         case event_setcolor :
+>           event_type[i] = 0;
+>           out_color = (((uint32_t) init_g[i])<<16) + (((uint16_t) init_r[i])<<8) + init_b[i];
+>           strip.setPixelColor(i, out_color) ;
+>           break;
+>         
+>         case event_fadeto :
+>           event_type[i] = -event_fadeto;
+>           //out_color = (((uint32_t) init_g[i])<<16) + (((uint16_t) init_r[i])<<8) + init_b[i];
+>           //strip.setPixelColor(i, out_color) ; // this debug should not be necessary
+>           break;
+147,149c102,104
+<       strip.show();
+<       while (millis() < returnTime) {
+<         updateButton();
+---
+>     }
+>     strip.show();
+>     unsigned long waitstart = millis();
+151c106,107
+<         for (int i = 0; i < NeoLEDs; i++) {
+---
+>     while (millis() < returnTime) {
+>        for (int i = 0; i< NeoLEDs; i++) {
+153c109
+< 
+---
+>        
+159a116
+>                 
+176,179c133,136
+<                                     current_g[i],
+<                                     current_r[i],
+<                                     current_b[i]
+<                                   ));
+---
+>                   current_g[i],
+>                   current_r[i],
+>                   current_b[i]
+>                   ));
+181,188c138,145
+<                 Serial.print(i);
+<                 Serial.print(": ");
+<                 Serial.print(end_g[i] - init_g[i],HEX);
+<                 Serial.print(", ");
+<                 Serial.print(diff_g[i],HEX);
+<                 Serial.print(", ");
+<                 Serial.println(current_g[i],HEX);
+<                 delay(10); //slow down serial output
+---
+>               Serial.print(i);
+>               Serial.print(": ");
+>               Serial.print(end_g[i] - init_g[i],HEX);
+>               Serial.print(", ");
+>               Serial.print(diff_g[i],HEX);
+>               Serial.print(", ");
+>               Serial.println(current_g[i],HEX);
+>               delay(10); //slow down serial output
+190c147
+<               break;
+---
+>               break;              
+192,194c149,150
+<         }
+<         strip.show();
+<       }
+---
+>        }
+>        strip.show();
+195a152,153
+>   }
+> };
+198,216d155
+<     void updateButton() {
+<      if (bounceState == WATCH_BUTTON) {
+<         boolean currentButtonState = digitalRead(BUTTON_PIN);
+<         if (previousButtonState != currentButtonState) {
+<           bounceState = IGNORE_BUTTON;
+<           previousMicros = micros();
+<         }
+<         previousButtonState = currentButtonState;
+<       }
+<       if (bounceState == IGNORE_BUTTON) {
+<         unsigned long currentMicros = micros();
+<         if ((unsigned long)(currentMicros - previousMicros) >= buttonWaitInterval) {
+<           debouncedButtonState = digitalRead(BUTTON_PIN);
+<           bounceState = WATCH_BUTTON;
+<         }
+<       }
+<     }
+< 
+< };
+223,224d161
+< // Main morse LED
+< #define LED_PIN 3
+227a165,172
+> // IR Parameters
+> #define IR_RX 8 //was 8
+> #define IR_TX 9 //was 9
+> #define IR_BAUD 300
+> IRSerial irSerial(IR_RX, IR_TX, false, true);
+> 
+> #define SERIAL_BAUD 115200
+> 
+268,269c213
+<   uint16_t hash = 0;
+<   
+---
+>   uint32_t hash = 0;
+272,273c216,219
+<   
+<   p = (const uint8_t *)(0x8000);//was (8192 - 256);
+---
+>   uint8_t hash2 = 0;
+>   uint8_t hash3 = 0;
+> 
+>   p = (const uint8_t *)(8192 - 256);
+280a227,230
+>     hash2 ^= *p;
+>     p ++;
+>     hash3 ^= *p;
+>     p ++;
+284,291c234,236
+<   hash = hash0 + (hash1 << 8);
+<   
+<   Serial.begin(115200);
+<   Serial.println(hash0,HEX);
+<   Serial.println(hash1,HEX);
+<   
+<   return (hash);
+< }
+---
+> 
+>   return ((hash3 << 24) + (hash2 << 16) + (hash1 << 8) + hash0);
+> } uint8_t hash0 = 0;
+366c311
+<   void readInGUIDAndKey() {
+---
+> void readInGUIDAndKey() {
+377c322
+<   }
+---
+> }
+411,413c356,358
+<     uint8_t r = random(64);
+<     uint8_t g = random(64);
+<     uint8_t b = random(64);
+---
+>     uint8_t r=random(64);
+>     uint8_t g=random(64);
+>     uint8_t b=random(64);
+415,419c360,364
+<     sprintf(str, "%02x", r);
+<     sprintf(str + 2, "%02x", g);
+<     sprintf(str + 4, "%02x", b);
+<     sprintf(str + 6, "xx");
+<     strip.setPixelColor(0, strip.Color(r, g, b));
+---
+>     sprintf(str,"%02x",r);
+>     sprintf(str+2,"%02x",g);
+>     sprintf(str+4,"%02x",b);
+>     sprintf(str+6,"xx");
+>     strip.setPixelColor(0, strip.Color(r,g,b));
+432,435c377,380
+<   // TEA (known to be broken) with all word sizes cut in half (64 bit key, 32 bit blocks)
+<   // Yes, I'm inviting people to hack this if they want. :-)
+<   // TODO: Since we're giving up on backward compatability in 2014, should we increase this size?
+<   void encrypt(uint16_t *v) {
+---
+> // TEA (known to be broken) with all word sizes cut in half (64 bit key, 32 bit blocks)
+> // Yes, I'm inviting people to hack this if they want. :-)
+> // TODO: Since we're giving up on backward compatability in 2014, should we increase this size?
+> void encrypt(uint16_t *v) {
+442c387
+<   }                                              // end cycle
+---
+>   }                                              // end cycle 
+444c389
+<   }
+---
+> }
+446c391
+<   uint16_t getNumMsgs() {
+---
+> uint16_t getNumMsgs() {
+448c393
+<   }
+---
+> }
+451c396
+<   void writeNumMsgs(uint16_t numMsgs) {
+---
+> void writeNumMsgs(uint16_t numMsgs) {
+454c399
+<   }
+---
+> }
+456c401
+<   bool isNumMsgsValid(uint16_t numMsgs) {
+---
+> bool isNumMsgsValid(uint16_t numMsgs) {
+458c403
+<   }
+---
+> }
+460,461c405,406
+<   // Writes a pairing code to EEPROM
+<   int writeEEPROM(unsigned char *guid, uint8_t *msg) {
+---
+> // Writes a pairing code to EEPROM
+> int writeEEPROM(unsigned char *guid, uint8_t *msg) {
+507c452
+<   }
+---
+> }
+767,776c712,721
+<     uint8_t r =  char2tob(rxBufNdx(-10), rxBufNdx(-9));
+<     uint8_t g =  char2tob(rxBufNdx(- 8), rxBufNdx(-7));
+<     uint8_t b =  char2tob(rxBufNdx(- 6), rxBufNdx(-5));
+< 
+<     //OLD    neo.event_type = 100; //100 is a dummy positive value
+<     //    neo.init_r = r;
+<     //    neo.init_g = g;
+<     //    neo.init_b = b;
+<     //    neo.end_r = neo.end_g = neo.end_b = 0;
+<     //    neo.event_millis = 500;
+---
+>     uint8_t r =  char2tob(rxBufNdx(-10),rxBufNdx(-9));
+>     uint8_t g =  char2tob(rxBufNdx(- 8),rxBufNdx(-7));
+>     uint8_t b =  char2tob(rxBufNdx(- 6),rxBufNdx(-5));
+> 
+> //OLD    neo.event_type = 100; //100 is a dummy positive value
+> //    neo.init_r = r;
+> //    neo.init_g = g;
+> //    neo.init_b = b;
+> //    neo.end_r = neo.end_g = neo.end_b = 0;
+> //    neo.event_millis = 500;
+778c723
+< 
+---
+>   
+783c728
+<   return ((convertchartobyte(hexH) << 4) + convertchartobyte(hexL));
+---
+>    return((convertchartobyte(hexH)<<4) + convertchartobyte(hexL));
+787,798c732,743
+<   if (cur >= 'A' && cur <= 'F') {
+<     cur -= 'A' - 10;
+<   } else if (cur >= 'a' && cur <= 'f') {
+<     cur -= 'a' - 10;
+<   } else if (cur >= '0' && cur <= '9') {
+<     cur -= '0';
+<   } else {
+<     Serial.print(F("readWordFromBuf() line noise: "));
+<     Serial.println(cur);
+<     return 0;  // Line noise.  Return and wait for the next oneo.
+<   }
+<   return (cur);
+---
+>     if (cur >= 'A' && cur <= 'F') {
+>       cur -= 'A' - 10;
+>     } else if (cur >= 'a' && cur <= 'f') {
+>       cur -= 'a' - 10;
+>     } else if (cur >= '0' && cur <= '9') {
+>       cur -= '0';
+>     } else {
+>       Serial.print(F("readWordFromBuf() line noise: "));
+>       Serial.println(cur);
+>       return 0;  // Line noise.  Return and wait for the next oneo.
+>     }
+>     return(cur);
+848a794,795
+> /*
+> void flashRandom(int wait, uint8_t howmany) {
+849a797,821
+>   for (uint16_t i = 0; i < howmany; i++) {
+>     // pick a random favorite color!
+>     int c = random(FAVCOLORS);
+>     int red = ColorSets[c][0];
+>     int green = ColorSets[c][1];
+>     int blue = ColorSets[c][2];
+> 
+>     // get a random pixel from the list
+>     int j = random(strip.numPixels());
+> 
+>     // now we will 'fade' it in 5 steps
+>     for (int x = 0; x < 5; x++) {
+>       int r = red * (x + 1); r /= 5;
+>       int g = green * (x + 1); g /= 5;
+>       int b = blue * (x + 1); b /= 5;
+> 
+>       strip.setPixelColor(j, strip.Color(r, g, b));
+>       strip.show();
+>       delay(wait);
+>     }
+>     // & fade out in 5 steps
+>     for (int x = 5; x >= 0; x--) {
+>       int r = red * x; r /= 5;
+>       int g = green * x; g /= 5;
+>       int b = blue * x; b /= 5;
+850a823,831
+>       strip.setPixelColor(j, strip.Color(r, g, b));
+>       strip.show();
+>       delay(wait);
+>     }
+>   }
+>   // NeoLEDs will be off when done (they are faded to 0)
+> }
+> 
+> */
+857c838
+< 
+---
+>   
+859,864c840,846
+<     /*if (digitalRead(BUTTON_PIN) == LOW) {
+<       long buttonStart = millis();
+<       while(digitalRead(BUTTON_PIN) == LOW && false) {
+<         if (millis() - buttonStart > 2000) {
+<           buttonStart = 0;  // Flag to not dump USB
+<           break;
+---
+>       /*if (digitalRead(BUTTON_PIN) == LOW) {
+>         long buttonStart = millis();
+>         while(digitalRead(BUTTON_PIN) == LOW && false) {
+>           if (millis() - buttonStart > 2000) {
+>             buttonStart = 0;  // Flag to not dump USB
+>             break;
+>           }
+866d847
+<       }
+868,871c849,852
+<       if (buttonStart) {
+<         // Dump database to USB
+<         dumpDatabaseToUSB();
+<       }
+---
+>         if (buttonStart) {
+>           // Dump database to USB
+>           dumpDatabaseToUSB();
+>         }
+873c854
+<     */
+---
+>   */
+885a867,872
+> /////////////////////////////////////////////////////////////
+> /////////////////////////////////////////////////////////////
+> /////////////////////////////////////////////////////////////
+> /////////////////////////////////////////////////////////////
+> void setup() 
+> {
+887,888d873
+< void setup() {
+<   uint32_t  PUFhash_result = PUF_hash();
+890,893c875
+<   strip.setBrightness(0xff);
+<   for (int kill = 0; kill < NeoLEDs; kill ++) {
+<     strip.setPixelColor(kill, 0);
+<   }
+---
+>   //strip.setBrightness(100);
+895,896c877,881
+< 
+< 
+---
+>   
+>   pinMode(Button, INPUT_PULLUP);
+>   
+>   uint32_t  PUFhash_result = PUF_hash();
+>   
+908d892
+<   pinMode(BUTTON_PIN, INPUT_PULLUP);
+915,916c899,901
+<   Serial.println("Starting kernel loop");
+< 
+---
+>   PackedVars.swapKeyAndGUID = 0;
+>   PackedVars.modeInit = 0;
+>   
+917a903,906
+> /////////////////////////////////////////////////////////////
+> /////////////////////////////////////////////////////////////
+> /////////////////////////////////////////////////////////////
+> /////////////////////////////////////////////////////////////
+919,930c908,919
+< 
+< uint32_t cylon_BGcolor = 0x000000; //((uint32_t)r << 16) | ((uint32_t)g << 8) |
+< uint32_t cylon_BGcolor2;
+< uint32_t cylon_FGcolor; //RED 25%;
+< uint32_t cylon_FGcolor2;
+< uint8_t last_cylon = 0;
+< uint8_t cylon_current_LEDnum = 4;
+< boolean cylon_dir = true;
+< //fix negative elspased time
+< const uint8_t center1 = 4;
+< const uint8_t center2 = 5;
+< uint32_t magenta = strip.Color(0, 0x3F, 0x3F);//GRB
+---
+> /*
+>   uint32_t cylon_BGcolor = 0x000000; //((uint32_t)r << 16) | ((uint32_t)g << 8) |
+>   uint32_t cylon_BGcolor2;
+>   uint32_t cylon_FGcolor; //RED 25%;
+>   uint32_t cylon_FGcolor2;
+>   uint8_t last_cylon = 0;
+>   uint8_t cylon_current_LEDnum = 4;
+>   boolean cylon_dir = true;
+>   //fix negative elspased time
+>   const uint8_t center1 = 4;
+>   const uint8_t center2 = 5;
+>   uint32_t magenta = strip.Color(0, 0x3F, 0x3F);//GRB
+935,944c924,925
+<   cylon_FGcolor = magenta; // GRB
+<   cylon_FGcolor2 = strip.Color(0x3F, 0, 0x3F); // GRB
+< 
+<   //cylon_BGcolor = strip.Color(0x3F,0,0x3F);
+<   //cylon_BGcolor2 = strip.Color(0x3F,0x3F,0);
+<   cylon_BGcolor = strip.Color(0x00, 0, 0x7F);
+<   cylon_BGcolor2 = strip.Color(0x7F, 0x00, 0);
+< 
+<   neo.fadeto(cylon_current_LEDnum, cylon_FGcolor, 0);  //lednum, Color, FadeTime
+<   neo.fadeto(NeoLEDs - cylon_current_LEDnum - 1, cylon_FGcolor2, 0);  //lednum, Color, FadeTime
+---
+>     cylon_FGcolor = magenta; // GRB     
+>     cylon_FGcolor2 = strip.Color(0x3F,0,0x3F); // GRB 
+946,949c927,933
+<   neo.fadeto(last_cylon, cylon_BGcolor, 200);
+<   neo.fadeto(NeoLEDs - last_cylon - 1, cylon_BGcolor2, 200);
+< 
+<   neo.wait(100, strip);
+---
+>     //cylon_BGcolor = strip.Color(0x3F,0,0x3F);
+>     //cylon_BGcolor2 = strip.Color(0x3F,0x3F,0);
+>     cylon_BGcolor = strip.Color(0x00,0,0x7F);
+>     cylon_BGcolor2 = strip.Color(0x7F,0x00,0);
+>     
+>     neo.fadeto(cylon_current_LEDnum, cylon_FGcolor, 0);  //lednum, Color, FadeTime
+>     neo.fadeto(NeoLEDs - cylon_current_LEDnum - 1, cylon_FGcolor2, 0);  //lednum, Color, FadeTime
+950a935,936
+>     neo.fadeto(last_cylon, cylon_BGcolor, 200);
+>     neo.fadeto(NeoLEDs - last_cylon - 1, cylon_BGcolor2, 200);
+952,958c938,948
+<   //bounce code
+<   last_cylon = cylon_current_LEDnum;
+<   if (cylon_dir) {
+<     cylon_current_LEDnum ++;
+<     if (cylon_current_LEDnum > (center1)) {
+<       cylon_current_LEDnum = center1;
+<       cylon_dir = false;
+---
+>     neo.wait(100, strip);
+>     
+>     
+>     //bounce code
+>     last_cylon = cylon_current_LEDnum;
+>     if (cylon_dir) {
+>       cylon_current_LEDnum ++;
+>       if (cylon_current_LEDnum > (center1)) {
+>         cylon_current_LEDnum = center1;
+>         cylon_dir = false;
+>       }
+960,965c950,955
+<   }
+<   else  {
+<     cylon_current_LEDnum --;
+<     if (cylon_current_LEDnum <= 0) {
+<       cylon_current_LEDnum = 0;
+<       cylon_dir = true;
+---
+>     else  {
+>       cylon_current_LEDnum --;
+>       if (cylon_current_LEDnum <=0) {
+>         cylon_current_LEDnum = 0;
+>         cylon_dir = true;
+>       }
+967d956
+<   }
+970,972c959,960
+< 
+< 
+< 
+---
+> */
+> ////////////////////////////////////////////////////////////////////////////////
+975,982c963,970
+<   {3, 8},
+<   {4, 9},
+<   {5, 0},
+<   {0xFF, 0xFF}, //turn all leds off
+<   {2, 7},
+<   {1, 6},
+<   {0, 5},
+<   {0xFF, 0xFF}, //turn all leds off
+---
+>   {3,8},
+>   {4,9},
+>   {5,0},
+>   {0xFF,0xFF}, //turn all leds off
+>   {2,7},
+>   {1,6},
+>   {0,5},
+>   {0xFF,0xFF}, //turn all leds off
+986d973
+< void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
+987a975,976
+> void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
+>   
+990,991c979,981
+< 
+<   if (portal_effect_anim[ON][0] != 0xFF) {
+---
+>   
+>   if (portal_effect_anim[ON][0] != 0xFF) 
+>   {
+998,1000c988,992
+<   else {
+<     for (OFF = 0; OFF < NeoLEDs; OFF++) {
+<       neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time
+---
+>   else 
+>   {
+>     for (OFF = 0;OFF<NeoLEDs;OFF++) 
+>     {
+>       neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time 
+1007a1000,1002
+> ////////////////////////////////////////////////////////////////////////////////
+> const uint8_t spider_effect_anim[] = 
+>   {5,2,7,4,9,6,1,8,3,0};
+1009,1010c1004
+< const uint8_t spider_effect_anim[] =
+< {5, 2, 7, 4, 9, 6, 1, 8, 3, 0};
+---
+>   
+1012c1006,1008
+< void NeoEffect_spider(uint8_t colorsetnum, Colorsets colorset, int period) {
+---
+> 
+> void NeoEffect_spider(uint8_t colorsetnum, Colorsets colorset, int period) 
+> {
+1014a1011
+>   
+1024c1021
+< 
+---
+> ////////////////////////////////////////////////////////////////////////////////
+1026c1023
+< 
+---
+>   
+1029c1026
+< 
+---
+>   
+1037c1034
+< 
+---
+> ////////////////////////////////////////////////////////////////////////////////
+1039,1051c1036,1048
+<   {2, 3},
+<   {1, 4},
+<   {0, 5},
+<   {9, 6},
+<   {8, 7},
+<   {0xFF, 0xFF}, //turn all leds off
+<   {8, 7},
+<   {9, 6},
+<   {0, 5},
+<   {1, 4},
+<   {2, 3},
+<   {0xFF, 0xFF}, //turn all leds off
+< 
+---
+>   {2,3},
+>   {1,4},
+>   {0,5},
+>   {9,6},
+>   {8,7},
+>   {0xFF,0xFF}, //turn all leds off
+>   {8,7},
+>   {9,6},
+>   {0,5},
+>   {1,4},
+>   {2,3},
+>   {0xFF,0xFF}, //turn all leds off
+>   
+1055d1051
+< void NeoEffect_cylon(uint8_t colorsetnum, Colorsets colorset, int period) {
+1056a1053,1054
+> void NeoEffect_cylon(uint8_t colorsetnum, Colorsets colorset, int period) {
+>   
+1059c1057
+< 
+---
+>   
+1062a1061
+>     if (cylon_effect_anim[OFF][0] != 0xFF) {
+1064a1064
+>     }
+1068,1069c1068,1069
+<     for (OFF = 0; OFF < NeoLEDs; OFF++) {
+<       neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time
+---
+>     for (OFF = 0;OFF<NeoLEDs;OFF++) {
+>       neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time 
+1077c1077,1085
+< 
+---
+> ////////////////////////////////////////////////////////////////////////////////
+> /*       5
+>  *    4     6
+>  * 3           7
+>  * 2           8
+>  *    1     9
+>  *       0
+>  * 
+>  */
+1079,1087c1087,1099
+<   {2, 3},
+<   {1, 4},
+<   {0, 5},
+<   {9, 6},
+<   {8, 7},
+<   {9, 6},
+<   {0, 5},
+<   {1, 4},
+< 
+---
+>   {2,3},
+>   {1,4},
+>   {0,5},
+>   {9,6},
+>   {8,7},
+>   //{0xFF,0xFF}, //turn all leds off
+>   //{8,7},
+>   {9,6},
+>   {0,5},
+>   {1,4},
+>   //{2,3},
+>   //{0xFF,0xFF}, //turn all leds off
+>   
+1091d1102
+< void NeoEffect_cylon2(uint8_t colorsetnum, Colorsets colorset, int period) {
+1092a1104,1105
+> void NeoEffect_cylon2(uint8_t colorsetnum, Colorsets colorset, int period) {
+>   
+1095c1108,1109
+< 
+---
+>   
+>   if (cylon2_effect_anim[ON][0] != 0xFF) {
+1097c1111,1112
+<     neo.fadeto( cylon2_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
+---
+>     neo.fadeto( cylon2_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period); 
+>     if (cylon2_effect_anim[OFF][0] != 0xFF) {
+1099a1115
+>     }
+1101c1117,1122
+<   if (ON == 0 || ON == 5)
+---
+>   }
+>   else {
+>     for (OFF = 0;OFF<NeoLEDs;OFF++) {
+>       neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time 
+>     }
+>     neo.wait(period << 2, strip);
+1103d1123
+<   if (ON == 5)  
+1104a1125
+>   }
+1106a1128,1129
+> ////////////////////////////////////////////////////////////////////////////////
+> const uint8_t waterfall_effect_anim[][2] = {};
+1107a1131
+> #define waterfall_effect_anim_length 8
+1109a1134,1149
+> void NeoEffect_waterfall(uint8_t colorsetnum, Colorsets colorset, int period) 
+> {
+>   uint8_t ON = effect_counterA % waterfall_effect_anim_length;
+>   uint8_t OFF = (effect_counterA - 1) % waterfall_effect_anim_length;
+> }
+> ////////////////////////////////////////////////////////////////////////////////
+> /*       5
+>  *    4     6
+>  * 3           7
+>  * 2           8
+>  *    1     9
+>  *       0
+>  */
+> const uint8_t zigzag_effect_anim[] = {2,4,0,6,8,7,9,5,1,3};
+>   
+> #define zigzag_effect_anim_length 10
+1111c1151,1165
+< /////////////////////////////////////////////////////////////
+---
+> void NeoEffect_zigzag(uint8_t colorsetnum, Colorsets colorset, int period) 
+> {
+>   uint8_t ON = effect_counterA % zigzag_effect_anim_length;
+>   uint8_t OFF = (effect_counterA - 1) % zigzag_effect_anim_length;
+>   
+> 
+>   neo.fadeto( zigzag_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
+>   neo.fadeto( zigzag_effect_anim[OFF], colorset.getBG(colorsetnum , 0) , period << 1);
+>   neo.wait(period, strip);
+>  
+>   if (ON == 0) 
+>   {
+>     FGcounter ++;
+>     BGcounter ++;
+>   }
+1114,1115c1168,1202
+< uint8_t current_effect = 0;
+< const uint8_t numeffects = 5;
+---
+>     effect_counterA ++;
+> }
+> ////////////////////////////////////////////////////////////////////////////////
+>  /*       5
+>  *    4     6
+>  * 3           7
+>  * 2           8
+>  *    1     9
+>  *       0
+>  */
+> const uint8_t infinity_effect_anim[] = {0,1,2,3,4,5,6,7,8,9,0,5,4,3,2,1,0,9,8,7,6,5};
+>   
+> #define infinity_effect_anim_length 22
+> 
+> void NeoEffect_infinity(uint8_t colorsetnum, Colorsets colorset, int period) 
+> {
+>   uint8_t ON = effect_counterA % infinity_effect_anim_length;
+>   uint8_t OFF = (effect_counterA - 1) % infinity_effect_anim_length;
+>   
+> 
+>   neo.fadeto( infinity_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
+>   neo.fadeto( infinity_effect_anim[OFF], colorset.getBG(colorsetnum , 0) , period << 1);
+>   neo.wait(period, strip);
+>  
+>   if (ON == 0) 
+>   {
+>     FGcounter ++;
+>     BGcounter ++;
+>   }
+> 
+> 
+>     effect_counterA ++;
+> }
+> ////////////////////////////////////////////////////////////////////////////////
+> uint8_t current_effect = 6;
+1116a1204
+> 
+1120,1132c1208,1217
+<     case 0: NeoEffect_portal (colorsetnum, colorset, 200); break;
+<     case 1: NeoEffect_spider (colorsetnum, colorset, 100); break;
+<     case 2: NeoEffect_spider2(colorsetnum, colorset, 50);  break;
+<     case 3: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
+<     case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
+<   }
+<   if (!debouncedButtonState) {
+<     debouncedButtonState = 1;
+<     current_effect = (current_effect + 1) % numeffects;
+<   }
+<   Serial.print("Effect = ");
+<   Serial.print("\t");
+<   Serial.println(current_effect);
+---
+>   case 0: NeoEffect_portal (colorsetnum, colorset, 200); break;
+>   case 1: NeoEffect_spider (colorsetnum, colorset, 100); break;
+>   case 2: NeoEffect_spider2(colorsetnum, colorset, 10);  break;
+>   case 3: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
+>   case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
+>   case 5: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
+>   case 6: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
+>   }
+> 
+> 
