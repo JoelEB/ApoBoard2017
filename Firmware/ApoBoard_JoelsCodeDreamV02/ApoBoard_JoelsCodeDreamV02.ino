@@ -977,15 +977,18 @@ void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
   uint8_t ON = effect_counterA % portal_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % portal_effect_anim_length;
   
-  if (portal_effect_anim[ON][0] != 0xFF) {
+  if (portal_effect_anim[ON][0] != 0xFF) 
+  {
     neo.fadeto( portal_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
     neo.fadeto( portal_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
     neo.fadeto( portal_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
     neo.fadeto( portal_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
     neo.wait(period, strip);
   }
-  else {
-    for (OFF = 0;OFF<NeoLEDs;OFF++) {
+  else 
+  {
+    for (OFF = 0;OFF<NeoLEDs;OFF++) 
+    {
       neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time 
     }
     neo.wait(period << 2, strip);
@@ -1055,8 +1058,10 @@ void NeoEffect_cylon(uint8_t colorsetnum, Colorsets colorset, int period) {
   if (cylon_effect_anim[ON][0] != 0xFF) {
     neo.fadeto( cylon_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
     neo.fadeto( cylon_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
+    if (cylon_effect_anim[OFF][0] != 0xFF) {
     neo.fadeto( cylon_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
     neo.fadeto( cylon_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
+    }
     neo.wait(period, strip);
   }
   else {
@@ -1103,9 +1108,11 @@ void NeoEffect_cylon2(uint8_t colorsetnum, Colorsets colorset, int period) {
   
   if (cylon2_effect_anim[ON][0] != 0xFF) {
     neo.fadeto( cylon2_effect_anim[ON][0], colorset.getFG(colorsetnum, 0) , period);
-    neo.fadeto( cylon2_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period);
+    neo.fadeto( cylon2_effect_anim[ON][1], colorset.getFG(colorsetnum, 0) , period); 
+    if (cylon2_effect_anim[OFF][0] != 0xFF) {
     neo.fadeto( cylon2_effect_anim[OFF][0], colorset.getBG(colorsetnum, 0) , period);
     neo.fadeto( cylon2_effect_anim[OFF][1], colorset.getBG(colorsetnum, 0) , period);
+    }
     neo.wait(period, strip);
   }
   else {
@@ -1146,29 +1153,54 @@ void NeoEffect_zigzag(uint8_t colorsetnum, Colorsets colorset, int period)
   uint8_t ON = effect_counterA % zigzag_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % zigzag_effect_anim_length;
   
-/*  neo.fadeto( zigzag_effect_anim[ON], colorset.getFG(colorsetnum, 1) , period);
-  neo.fadeto( zigzag_effect_anim[OFF], colorset.getBG(colorsetnum, 0) , period >> 1);
+
+  neo.fadeto( zigzag_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
+  neo.fadeto( zigzag_effect_anim[OFF], colorset.getBG(colorsetnum , 0) , period << 1);
   neo.wait(period, strip);
-  if (zigzag_effect_anim[ON] == 0) {
+ 
+  if (ON == 0) 
+  {
     FGcounter ++;
     BGcounter ++;
   }
-  effect_counterA ++;
-*/
 
-  neo.fadeto( zigzag_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period << 1);
-  neo.fadeto( zigzag_effect_anim[OFF], colorset.getBG(0 , 0) , period);
-  
-  neo.wait(period << 1, strip);
-  
-  effect_counterA ++;
-  FGcounter ++;
-  BGcounter ++;
+
+    effect_counterA ++;
 }
 ////////////////////////////////////////////////////////////////////////////////
+ /*       5
+ *    4     6
+ * 3           7
+ * 2           8
+ *    1     9
+ *       0
+ */
+const uint8_t infinity_effect_anim[] = {0,1,2,3,4,5,6,7,8,9,0,5,4,3,2,1,0,9,8,7,6,5};
   
-uint8_t current_effect = 5;
-uint8_t colorsetnum = 5;
+#define infinity_effect_anim_length 22
+
+void NeoEffect_infinity(uint8_t colorsetnum, Colorsets colorset, int period) 
+{
+  uint8_t ON = effect_counterA % infinity_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % infinity_effect_anim_length;
+  
+
+  neo.fadeto( infinity_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
+  neo.fadeto( infinity_effect_anim[OFF], colorset.getBG(colorsetnum , 0) , period << 1);
+  neo.wait(period, strip);
+ 
+  if (ON == 0) 
+  {
+    FGcounter ++;
+    BGcounter ++;
+  }
+
+
+    effect_counterA ++;
+}
+////////////////////////////////////////////////////////////////////////////////
+uint8_t current_effect = 6;
+uint8_t colorsetnum = 2;
 
 void loop()
 {
@@ -1178,22 +1210,11 @@ void loop()
   case 2: NeoEffect_spider2(colorsetnum, colorset, 10);  break;
   case 3: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
   case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
-  case 5: NeoEffect_zigzag (colorsetnum, colorset, 100);  break;
+  case 5: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
+  case 6: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
   }
 
-  /*
-  if(digitalRead(Button) == LOW)
-  {
-    current_effect++;
-    if(current_effect > 4)
-    {
-      current_effect = 0;
-    }   
-    //Serial.print("Current Effect:");
-    //Serial.println(current_effect);
-    delay(100);
-  }
-  */
+
 }
 
 
