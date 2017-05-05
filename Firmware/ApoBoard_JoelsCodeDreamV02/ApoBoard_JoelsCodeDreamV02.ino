@@ -661,6 +661,8 @@ void setup()
 /////////////////////////////////////////////////////////////
 
 uint8_t effect_counterA = 0; //global effect_counter for all animations
+
+/////////////////////////////////////////////////////////////
 const uint8_t portal_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {3, 8},
   {4, 9},
@@ -698,6 +700,49 @@ void NeoEffect_portal(uint8_t colorsetnum, Colorsets colorset, int period) {
     neo.wait(period << 2, strip);
     FGcounter ++;
     BGcounter ++;
+  }
+  effect_counterA ++;
+}
+////////////////////////////////////////////////////////////////////////////////
+/*       5
+      4     6
+   3           7
+   2           8
+      1     9
+         0      */
+
+const uint8_t portal2_effect_anim[] = {0, 1, 2, 0xFF, 7, 6, 5, 0xFF, 0, 9, 8, 0xFF, 3, 4, 5, 0xFF};
+
+#define portal2_effect_anim_length 16
+
+void NeoEffect_portal2(uint8_t colorsetnum, Colorsets colorset, int period) {
+
+  uint8_t ON = effect_counterA % portal2_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % portal2_effect_anim_length;
+
+  if (portal2_effect_anim[ON] != 0xFF)
+  {
+    neo.fadeto( portal2_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
+    if ( portal2_effect_anim[OFF] != 0xFF ) 
+    {
+      neo.fadeto( portal2_effect_anim[OFF], colorset.getBG(colorsetnum, 0) , period);
+    }
+      if (ON == 0)
+      {
+        FGcounter ++;
+        BGcounter ++;
+      }
+    neo.wait(period, strip);
+  }
+
+  else
+  {
+    for (OFF = 0; OFF < NeoLEDs; OFF++)
+    {
+      neo.fadeto( OFF, colorset.getBG(0, 0), period << 2); //fade in half the time
+    }
+    neo.wait(period << 2, strip);
+
   }
   effect_counterA ++;
 }
@@ -921,7 +966,8 @@ void NeoEffect_smiley(uint8_t colorsetnum, Colorsets colorset, int period) {
     BGcounter ++;
   }
   draw_smiley(face, smiley_rotation, colorsetnum, colorset, period);
-  strip.setBrightness((r % 0x10) + 0x30);
+  //strip.setBrightness((r % 0x10) + 0x30);
+  strip.setBrightness(30);
   neo.wait(period, strip);
   effect_counterA ++;
   //smiley_rotation ++;
@@ -940,7 +986,7 @@ void draw_smiley(uint8_t LEDimg, uint8_t rot, uint8_t colorsetnum, Colorsets col
 
 ////////////////////////////////////////////////////////////////////////////////
 uint8_t current_effect = 0;
-uint8_t colorsetnum = 2;
+uint8_t colorsetnum = 6;
 
 void loop()
 {
@@ -953,14 +999,16 @@ void loop()
     case 5: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
     case 6: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
     case 7: NeoEffect_portal (colorsetnum, colorset, 200); break;
+    case 8: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
   }
-  neo.wait(10, strip); //dummy wait to set debuncedButtonState
+  /*neo.wait(10, strip); //dummy wait to set debuncedButtonState
   if (!debouncedButtonState) {
     debouncedButtonState = 1;
     current_effect = (current_effect + 1) % NumEffects;
-    Serial.print("Effect = ");
-    Serial.print("\t");
-    Serial.println(current_effect);
+    //Serial.print("Effect = ");
+    //Serial.print("\t");
+    //Serial.println(current_effect);
   }
+  */
 }
 
