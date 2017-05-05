@@ -13,19 +13,22 @@
 #define RED               0x00FF00
 #define BLUE              0x0000FF
 
-#define YELLOW            0xFFFF00
+#define L_GREEN             0x770000
+#define L_RED               0x007700
+#define L_BLUE              0x000077
 
+#define YELLOW            0xFFFF00
+#define ORANGE            0x77FF00
+
+#define TEST              0xFF7700
 
 #define CYAN              0xFF00FF
 #define DARK_CYAN         0x8B008B
-#define ORANGE            0x99FF00
+
 
 
 #define PURPLE            0x0099FF
-#define DARK_PURPLE       0x00FFFF
-#define MAGENTA           
-
-
+#define MAGENTA       0x00FFFF        
 
 #define AQUA              0xFF7FD4
 #define AERO_BLUE         0xFFC9E5
@@ -56,7 +59,9 @@ class Colorsets{
     {0x00FF00,0x00FF00,0x00FF00,0x00FF00,     0x000200,0x000200,0x000200,0x000200}, //RED only
     
     {0x38761D,0x351C75,0xE69138,0xC27BA0,     0x110022,0x440022,0x771133,0x004411},
-    {YELLOW,RED,YELLOW,RED,    RED,YELLOW,RED,YELLOW}
+    {YELLOW,RED,YELLOW,RED,    RED,YELLOW,RED,YELLOW},
+    {TEST,L_RED,YELLOW,ORANGE,    L_BLUE,L_BLUE,L_BLUE,L_BLUE},
+    {PURPLE,ORANGE,YELLOW,GREEN,     AQUA,CERULAN,BLUE_GREEN,CARIBBEAN_CURRENT}
     
   };
   
