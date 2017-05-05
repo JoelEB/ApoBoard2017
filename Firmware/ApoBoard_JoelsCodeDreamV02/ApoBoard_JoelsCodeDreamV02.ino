@@ -1008,20 +1008,14 @@ void loop()
     case 7: NeoEffect_portal (colorsetnum, colorset, 200); break;
     case 8: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
   }
-<<<<<<< HEAD
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
   if (debouncedButtonHeld > 10000) {
     debouncedButtonHeld = 0;
-=======
-  /*neo.wait(10, strip); //dummy wait to set debuncedButtonState
-  if (!debouncedButtonState) {
-    debouncedButtonState = 1;
->>>>>>> e87a8c7041d3bba9711dd816a81a12fa9d56fd75
     current_effect = (current_effect + 1) % NumEffects;
-    //Serial.print("Effect = ");
-    //Serial.print("\t");
-    //Serial.println(current_effect);
+    Serial.print("Effect = ");
+    Serial.print("\t");
+    Serial.println(current_effect);
   }
-  */
+ 
 }
 
