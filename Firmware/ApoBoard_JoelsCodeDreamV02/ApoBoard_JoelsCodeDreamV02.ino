@@ -22,7 +22,7 @@ uint8_t brightness = 10; //global brightness
 #define IR_RX 8 //was 8
 #define IR_TX 9 //was 9
 #define IR_BAUD 300
-IRSerial irSerial(IR_RX, IR_TX, false, true);
+IRSerial ir(IR_RX, IR_TX, false, true);
 
 #define SERIAL_BAUD 115200
 
@@ -38,9 +38,10 @@ int colorMode = 0;
 #define WATCH_BUTTON true
 #define IGNORE_BUTTON false
 const int buttonWaitInterval = 6000;
-unsigned long previousMicros = 0;
+unsigned long previousMicros = 0 , previousPreviousMicros = 0;
 boolean previousButtonState = NOT_PUSHED;
 boolean debouncedButtonState = NOT_PUSHED;
+unsigned long debouncedButtonHeld = 0;
 boolean bounceState = false;
 
 
@@ -177,6 +178,7 @@ class Neo_event {
       if (bounceState == WATCH_BUTTON) {
         boolean currentButtonState = digitalRead(BUTTON_PIN);
         if (previousButtonState != currentButtonState) {
+          previousPreviousMicros = previousMicros;
           bounceState = IGNORE_BUTTON;
           previousMicros = micros();
         }
@@ -186,9 +188,12 @@ class Neo_event {
         unsigned long currentMicros = micros();
         if ((unsigned long)(currentMicros - previousMicros) >= buttonWaitInterval) {
           debouncedButtonState = digitalRead(BUTTON_PIN);
+          if (debouncedButtonState)
+            debouncedButtonHeld = (currentMicros - previousPreviousMicros);
           bounceState = WATCH_BUTTON;
         }
       }
+
     }
 
 };
@@ -339,7 +344,7 @@ void intToStr(uint8_t *src, char *dst) {
 void writeWord(uint8_t *buf) {
   char str[9];
   intToStr(buf, str);
-  irSerial.println(str);
+  ir.println(str);
 }
 
 /* Processes the received buffer, pulls the 8 character "modified HEX"
@@ -425,9 +430,9 @@ unsigned char readWordFromIR() {
   head = 0;
   unsigned long start = millis();
   while (millis() - start < 5000) {  // koop for no more than 5 seconds
-    if (!irSerial.available())
+    if (!ir.available())
       continue;
-    unsigned char c = irSerial.read();
+    unsigned char c = ir.read(); //old defcon code
     rxBuf[head] = c;
     head = (head + 1) % RX_BUF_SIZE;
     if (isValidWord())
@@ -614,8 +619,8 @@ void delayAndReadIRSpecter(int pauseFor, Neo_event &ne) {
     */
 
     int ret;
-    if (ret = irSerial.available()) {
-      processIR(irSerial.read(), ne);
+    if (ret = ir.available()) {
+      processIR(ir.read(), ne); //old defcon code
     }
   }
 }
@@ -645,10 +650,10 @@ void setup()
   Serial.println(PUFhash_result & 0xFFFF, HEX);
 
   // Setup various serial ports  // A modified version of SoftwareSerial to handle inverted logic // (Async serial normally idles in the HIGH state, which would burn // through battery on our IR, so inverted logic idles in the LOW state.) // Also modified to modulate output at 38kHz instead of just turning the // LED on.  Otherwise, it's a pretty standard SoftwareSerial library.
-  irSerial.begin(IR_BAUD);
-  irSerial.listen();
+  ir.begin(IR_BAUD);
+  ir.listen();
   digitalWrite(IR_TX, LOW); // For some reason, the TX line starts high and wastes some battery.
-  pinMode(IR_RX, INPUT_PULLUP);
+  pinMode(IR_RX, INPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   Serial.println("Starting kernel loop");
@@ -905,7 +910,7 @@ const bool smileyFaces[][10] = {
   {1, 1, 1, 0, 0, 0, 1, 0, 1, 1}, // smile and left wink
   {1, 1, 1, 0, 1, 0, 0, 0, 1, 1}, // smile and right wink
   {1, 1, 1, 0, 0, 0, 0, 0, 1, 1}, // no eyes, just smile
-  {1, 0, 0, 0, 1, 0, 1, 0 ,0, 0} // small mouth, two eyes
+  {1, 0, 0, 0, 1, 0, 1, 0 , 0, 0} // small mouth, two eyes
 };
 uint8_t smiley_rotation = 0;
 void NeoEffect_smiley(uint8_t colorsetnum, Colorsets colorset, int period) {
@@ -944,6 +949,8 @@ uint8_t colorsetnum = 2;
 
 void loop()
 {
+  //if (!ir.write_SPECTER(0xAA))
+    //Serial.println("TX buffer overflow");
   switch (current_effect) {
     case 0: NeoEffect_smiley (colorsetnum, colorset, 300); break;
     case 1: NeoEffect_spider (colorsetnum, colorset, 100); break;
@@ -955,8 +962,8 @@ void loop()
     case 7: NeoEffect_portal (colorsetnum, colorset, 200); break;
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
-  if (!debouncedButtonState) {
-    debouncedButtonState = 1;
+  if (debouncedButtonHeld > 10000) {
+    debouncedButtonHeld = 0;
     current_effect = (current_effect + 1) % NumEffects;
     Serial.print("Effect = ");
     Serial.print("\t");
