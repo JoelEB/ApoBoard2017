@@ -87,6 +87,8 @@ private:
   static inline void tunedDelay(uint16_t delay);
 
 public:
+  bool rxdatavalid;
+  uint8_t rxdata;
   // public methods
   IRSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic_rx = false, bool inverse_logic_tx = false, uint16_t modulation_frequency=0);
   ~IRSerial();

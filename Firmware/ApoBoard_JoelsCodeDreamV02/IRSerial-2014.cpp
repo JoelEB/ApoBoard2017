@@ -1,54 +1,15 @@
-/*
-  IRSerial.cpp (formerly NewSoftSerial.cpp) -
-  Multi-instance software serial library for Arduino/Wiring
-  -- Interrupt-driven receive and other improvements by ladyada
-   (http://ladyada.net)
-  -- Tuning, circular buffer, derivation from class Print/Stream,
-   multi-instance support, porting to 8MHz processors,
-   various optimizations, PROGMEM delay tables, inverse logic and
-   direct port writing by Mikal Hart (http://www.arduiniana.org)
-  -- Pin change interrupt macros by Paul Stoffregen (http://www.pjrc.com)
-  -- 20MHz processor support by Garrett Mace (http://www.macetech.com)
-  -- ATmega1280/2560 support by Brett Hagman (http://www.roguerobotics.com/)
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-  The latest version of this library can always be found at
-  http://arduiniana.org.
-*/
 
 
-// When set, _DEBUG co-opts pins 11 and 13 for debugging with an
-// oscilloscope or logic analyzer.  Beware: it also slightly modifies
-// the bit times, so don't rely on it too much at high baud rates
-#define _DEBUG 0
-#define _DEBUG_PIN1 11
-#define _DEBUG_PIN2 13
-//
-// Includes
-//
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include "Arduino.h"
 #include "IRSerial-2014.h"
 
-#define bittime 16
+#define bittime 20
 const uint8_t TX_zerotime = bittime * 1;
-const uint8_t TX_onetime = bittime * 2;
-const uint8_t TX_gaptime = bittime * 1;
-const uint8_t TX_starttime = bittime * 3;
+const uint8_t TX_onetime = bittime * 3;
+const uint8_t TX_gaptime = bittime * 2;
+const uint8_t TX_starttime = bittime * 4;
 
 
 
@@ -148,7 +109,6 @@ void IRSerial::recv()
     //DBUG Serial.write('.');
     // Wait approximately 1/2 of a bit width to "center" the sample
     tunedDelay(_rx_delay_centering);
-    DebugPulse(_DEBUG_PIN2, 1);
 
     // Read each of the 8 bits
     for (uint8_t i = 0x1; i; i <<= 1)
@@ -219,61 +179,56 @@ shift_in = 0,
 shift_count = 0,
 rxdata = 0;
 volatile bool rxdatavalid = false;
-uint8_t i=0;
-uint16_t ellog[10];
-const uint16_t RX_error_margin = 100;
 volatile bool TX_pending;
+volatile uint16_t RX_dynabittime;
 
 void IRSerial::recv_SPECTER()
 {
   //uint8_t rx = *_receivePortRegister & _receiveBitMask;
   uint32_t now = micros();
-  uint16_t elapsed = now - recv_last_micros;
-  recv_last_micros = now;
+  uint16_t elapsed = now - recv_last_micros ;
+  if (TX_pending) {
+    shift_count = 0;
+    return;
+  }
+
   //uint8_t oldSREG = SREG;
   //cli();  // turn off interrupts
-  if (rx_pin_read() & !TX_pending) {
-    //if (abs(elapsed - (const uint16_t) (1e6 / 38e3 * TX_starttime ) ) < RX_error_margin) {
-    if (elapsed > 2000) {
-      shift_in = 0;
-      shift_count = 8;
-      rxdatavalid = false;
-      //Serial.print("+");
+  if (*_receivePortRegister & _receiveBitMask) {
+    if (shift_count == 0) {
+      if (elapsed > 200) {
+        RX_dynabittime = elapsed >> 1;
+        shift_in = 0;
+        shift_count = 8;
+        rxdatavalid = false;
+      }
     }
-    //if ((abs(elapsed - (const uint16_t) (1e6 / 38e3 * TX_zerotime ) ) < RX_error_margin) && shift_count) {
-    if ((abs(elapsed - (const uint16_t) (496) ) < RX_error_margin) && shift_count) {
-      shift_in += shift_in;
+    else {
+      shift_in <<= 1;
       shift_count --;
-      //Serial.print("0");
+      if (elapsed > RX_dynabittime) shift_in |= 1;
+      if (!shift_count) {
+        rxdata = shift_in;
+        rxdatavalid = true;
+        Serial.println(rxdata, BIN);
+      }
     }
-    //if ((abs(elapsed - (const uint16_t) (1e6 / 38e3 * TX_onetime ) ) < RX_error_margin)  && shift_count) {
-    if ((abs(elapsed - (const uint16_t) (760 ) ) < RX_error_margin)  && shift_count) {
-      shift_in += shift_in;
-      shift_in |= 1;
-      shift_count --;
-      //Serial.print("1");
-    }
-    if (!shift_count && !rxdatavalid) {
-      rxdata = shift_in;
-      rxdatavalid = true;
-      //Serial.print("RX: ");
-      //Serial.println(rxdata, BIN);
-    }
+
     //Serial.println(elapsed);
-    /*ellog[i] = elapsed;
-    i=(i+1) % 10;
-    if (!i) {
-      for (uint8_t o=0;o<10;o++)
-        Serial.println(ellog[o]);
-    }*/
-    
+
   }
+  else if (elapsed > 10000) {
+    shift_count = 0;
+  }
+  recv_last_micros = now;
 }
 
 uint8_t IRSerial::rx_pin_read()
 {
   return *_receivePortRegister & _receiveBitMask;
 }
+
+
 
 //
 // Interrupt handling
@@ -404,6 +359,7 @@ int IRSerial::read()
   _receive_buffer_head = (_receive_buffer_head + 1) % _SS_MAX_RX_BUFF;
   return d;
 }
+
 
 int IRSerial::available()
 {
@@ -571,10 +527,34 @@ volatile uint16_t oldTCNT1;
 volatile uint16_t oldOCR1A;
 volatile uint16_t oldICR1;
 volatile uint8_t oldTIMSK1;
+volatile uint8_t out_bittimes [19]; //precalcd by IRSerial::write_SPECTER written backwards
+volatile uint8_t out_bittime_counter;
 
 
 
 ISR(TIMER1_COMPB_vect) {
+  cli();
+  if (out_bittime_counter) {
+    out_bittimes[out_bittime_counter] --;
+    if (out_bittimes[out_bittime_counter] == 0) {
+      //TCCR1A = (TCCR1A & 0x3F) ^ 0x80;
+      TCCR1A ^= 0x80;
+      out_bittime_counter --;
+      //Serial.println(TCCR1A,HEX);
+    }
+  }
+  else if (TX_pending) {
+    TIMSK1 = oldTIMSK1;
+    TCCR1A = oldTCCR1A;
+    TCCR1B = oldTCCR1B;
+    TCNT1 = oldTCNT1;
+    OCR1A = oldOCR1A;
+    ICR1 = oldICR1;
+    //TX_shift_counter = 0;
+    TX_pending = false;
+  }
+};
+/* OLD ISR
   if (TX_ontime) {
     TX_ontime --;
     TCCR1A = (TCCR1A & 0x3F) | 0x80;  //p.170 Clear OC1A/OC1B on Compare Match (Set output to low level).
@@ -599,17 +579,18 @@ ISR(TIMER1_COMPB_vect) {
     TX_shift_out += TX_shift_out; //(TX_shift_out << 1);
     TX_shift_counter --;
   }
-  else if (TX_pending){
+  else if (TX_pending) {
     TIMSK1 = oldTIMSK1;
     TCCR1A = oldTCCR1A;
     TCCR1B = oldTCCR1B;
     TCNT1 = oldTCNT1;
     OCR1A = oldOCR1A;
     ICR1 = oldICR1;
-    TX_shift_counter = 0;
+    //TX_shift_counter = 0;
     TX_pending = false;
   }
-};
+  };
+*/
 
 size_t IRSerial::write_SPECTER(uint8_t b)
 {
@@ -617,10 +598,26 @@ size_t IRSerial::write_SPECTER(uint8_t b)
     return 0; //still shifting out data so exit
   }
   TX_shift_counter = 0;
-  //debug digitalWrite(LEDPIN, !digitalRead(LEDPIN));
 
-  //uint8_t oldSREG = SREG;
-  //cli();  // turn off interrupts for a clean txmit
+  out_bittimes[18] = TX_starttime;
+  out_bittimes[17] = TX_gaptime;
+  uint8_t i = 16;
+  while (i > 0) {
+    if (b & 0x80) {
+      out_bittimes[i] = TX_onetime;
+      i --;
+      out_bittimes[i] = TX_gaptime;
+      i --;
+    }
+    else {
+      out_bittimes[i] = TX_zerotime;
+      i --;
+      out_bittimes[i] = TX_gaptime;
+      i --;
+    }
+    b <<= 1;
+  }
+  out_bittime_counter = 18;
 
   // Save current Timer1 values.
   oldTCCR1A = TCCR1A;
@@ -638,11 +635,11 @@ size_t IRSerial::write_SPECTER(uint8_t b)
   OCR1A = 210;
   ICR1 = 421;
 
-  TIMSK1 |= (1 << OCIE1B);
   TX_shift_out = b;
   TX_original = b;
   TX_shift_counter = 9;
   TX_pending = true;
+  TIMSK1 |= (1 << OCIE1B);
   //SREG = oldSREG; // turn interrupts back on
 
   return 1;
@@ -681,8 +678,4 @@ int IRSerial::peek()
   // Read from "head"
   return _receive_buffer[_receive_buffer_head];
 }
-
-
-
-
 

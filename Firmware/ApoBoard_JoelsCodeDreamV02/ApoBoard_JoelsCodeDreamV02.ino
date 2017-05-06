@@ -1,3 +1,4 @@
+
 #include <stdlib.h>
 
 #include <avr/pgmspace.h>
@@ -47,7 +48,6 @@ boolean bounceState = false;
 
 class Neo_event {
   public:
-
     int8_t event_type [NeoLEDs];
     uint8_t init_r [NeoLEDs];
     uint8_t init_g [NeoLEDs];
@@ -78,7 +78,6 @@ class Neo_event {
 
     boolean fadeto(uint8_t LEDnum, uint32_t Color, uint16_t duration) {
       LEDnum %= NeoLEDs;
-      event_type[LEDnum] = event_fadeto;
       end_g[LEDnum] = (Color >> 17) & 0x7F;
       end_r[LEDnum] = (Color >> 9) & 0x7F;
       end_b[LEDnum] = (Color >> 1) & 0x7F;
@@ -97,6 +96,8 @@ class Neo_event {
         Serial.println(end_g[LEDnum],HEX);*/
       event_starttime[LEDnum] = millis();
       event_duration[LEDnum] = duration;
+      event_type[LEDnum] = event_fadeto;
+
     }
 
     uint8_t applybrightness(uint8_t in, uint8_t intensity) {
@@ -630,14 +631,15 @@ Neo_event neo;
 Colorsets colorset;
 
 /////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
+/////////////////               /////////////////////////////
+///////////////// S E T U P     /////////////////////////////
+/////////////////               /////////////////////////////
 /////////////////////////////////////////////////////////////
 void setup()
 {
   uint32_t  PUFhash_result = PUF_hash();
   strip.begin();
-  strip.setBrightness(0xff);
+  strip.setBrightness(0x80);
   for (int kill = 0; kill < NeoLEDs; kill ++) {
     strip.setPixelColor(kill, 0);
   }
@@ -653,7 +655,7 @@ void setup()
   ir.begin(IR_BAUD);
   ir.listen();
   digitalWrite(IR_TX, LOW); // For some reason, the TX line starts high and wastes some battery.
-  pinMode(IR_RX, INPUT);
+  pinMode(IR_RX, INPUT_PULLUP);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   Serial.println("Starting kernel loop");
@@ -728,15 +730,15 @@ void NeoEffect_portal2(uint8_t colorsetnum, Colorsets colorset, int period) {
   if (portal2_effect_anim[ON] != 0xFF)
   {
     neo.fadeto( portal2_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
-    if ( portal2_effect_anim[OFF] != 0xFF ) 
+    if ( portal2_effect_anim[OFF] != 0xFF )
     {
       neo.fadeto( portal2_effect_anim[OFF], colorset.getBG(colorsetnum, 0) , period);
     }
-      if (ON == 0)
-      {
-        FGcounter ++;
-        BGcounter ++;
-      }
+    if (ON == 0)
+    {
+      FGcounter ++;
+      BGcounter ++;
+    }
     neo.wait(period, strip);
   }
 
@@ -949,39 +951,60 @@ void NeoEffect_infinity(uint8_t colorsetnum, Colorsets colorset, int period)
         0
 */
 const uint8_t NumSmileyFaces = 5;
-const bool smileyFaces[][10] = {
+const uint8_t smileyFaces[][10] = {
   {1, 1, 1, 0, 1, 0, 1, 0, 1, 1}, // basic smile and two eyes
   {1, 1, 1, 0, 0, 0, 0, 0, 1, 1}, // no eyes, just smile
   {1, 1, 1, 0, 0, 0, 1, 0, 1, 1}, // smile and left wink
   {1, 1, 1, 0, 1, 0, 0, 0, 1, 1}, // smile and right wink
-  {1, 1, 1, 0, 0, 0, 0, 0, 1, 1}, // no eyes, just smile
-  {1, 0, 0, 0, 1, 0, 1, 0 , 0, 0} // small mouth, two eyes
+  {1, 0, 0, 0, 1, 0, 1, 0, 0, 0} // small mouth, two eyes
 };
+uint8_t smiley_buffer [10] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 uint8_t smiley_rotation = 0;
-void NeoEffect_smiley(uint8_t colorsetnum, Colorsets colorset, int period) {
-  uint8_t face = 0;
-  uint8_t r = random(0x100);
-  if ( r > 0xF0 )
-    face = random(NumSmileyFaces - 1) + 1;
-  if ( r < 0x04 )
-    smiley_rotation = random(2) + 9;
+bool update_smiley = true;
+uint8_t smiley_face = 0;
 
+void NeoEffect_smiley(uint8_t colorsetnum, Colorsets colorset, int period) {
+  uint8_t r = random(0x100);
+  if ( r > 0xF0 ) {
+    if (r < 0xF3) {
+      smiley_face = random(NumSmileyFaces - 1) + 1;
+      update_smiley = true;
+    }
+    else if (smiley_face != 1) {
+      smiley_face = 1; //maybe do other smiley_face, but mostly just blink both eyes.
+      update_smiley = true;
+    }
+  }
+  //return to normal smiley face after if another expression was set
+  else if (smiley_face != 0) {
+    smiley_face = 0;
+    update_smiley = true;
+  }
+  if ( r < 0x04 ) {
+    smiley_rotation = random(2) + 9;
+    update_smiley = true;
+  }
   if ( r == 0x80) {
     FGcounter ++;
     BGcounter ++;
+    update_smiley = true;
   }
-  draw_smiley(face, smiley_rotation, colorsetnum, colorset, period);
-  //strip.setBrightness((r % 0x10) + 0x30);
   strip.setBrightness(30);
+  if (update_smiley) {
+    draw_smiley(smiley_face, smiley_rotation, colorsetnum, colorset, period);
+    update_smiley = false;
+  }
   neo.wait(period, strip);
   effect_counterA ++;
-  //smiley_rotation ++;
 }
 
 void draw_smiley(uint8_t LEDimg, uint8_t rot, uint8_t colorsetnum, Colorsets colorset, int period) {
   for (uint8_t i = 0; i < 10; i++) {
-    if (smileyFaces[LEDimg][i] == 1) neo.fadeto( (i + rot) % NeoLEDs, colorset.getFG(colorsetnum, 0) , period >> 4);
-    else neo.fadeto( (i + rot) % NeoLEDs , colorset.getBG(0, 0) , period);
+    uint8_t led = (i + rot) % NeoLEDs;
+    if (smileyFaces[LEDimg][i])
+      neo.fadeto( led, colorset.getFG(colorsetnum, 0) , period >> 4);
+    else
+      neo.fadeto( led , colorset.getBG(0, 0) , period);
   }
 }
 
@@ -992,13 +1015,17 @@ void draw_smiley(uint8_t LEDimg, uint8_t rot, uint8_t colorsetnum, Colorsets col
 ////////////////////////////////////////////////////////////////////////////////
 uint8_t current_effect = 0;
 uint8_t colorsetnum = 6;
+uint32_t next_TX_millis = 0;
 
 void loop()
 {
-  //if (!ir.write_SPECTER(0xAA))
-    //Serial.println("TX buffer overflow");
+  if (millis() > next_TX_millis) {
+    if (!ir.write_SPECTER(0xAA))
+      Serial.println("TX buffer overflow");
+    next_TX_millis = millis() + 500 + random(500);
+  }
   switch (current_effect) {
-    case 0: NeoEffect_smiley (colorsetnum, colorset, 300); break;
+    case 0: IR_diagnostics(); break;
     case 1: NeoEffect_spider (colorsetnum, colorset, 100); break;
     case 2: NeoEffect_spider2(colorsetnum, colorset, 10);  break;
     case 3: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
@@ -1007,6 +1034,8 @@ void loop()
     case 6: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
     case 7: NeoEffect_portal (colorsetnum, colorset, 200); break;
     case 8: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
+    case 9: NeoEffect_smiley (colorsetnum, colorset, 300); break;
+
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
   if (debouncedButtonHeld > 10000) {
@@ -1016,6 +1045,31 @@ void loop()
     Serial.print("\t");
     Serial.println(current_effect);
   }
- 
+}
+uint32_t diag_valid_until = 0;
+// recieve any byte over IR and display on LEDs
+void IR_diagnostics( void ) {
+
+  if (ir.rxdatavalid) {
+    diag_valid_until = millis() + 1000;
+    uint8_t bin  = ir.rxdata;
+    for (uint8_t i = 0; i < 8; i++) {
+      if (bin & 0x80) {
+        strip.setPixelColor(i, 0x0000FF00) ; //red = bits
+      }
+      else
+        strip.setPixelColor(i , 0);
+      bin <<= 1;
+    }
+  }
+  if (millis() > diag_valid_until) {
+    for (uint8_t i = 0; i < 8; i++) {
+      strip.setPixelColor(i , random(16));
+    }
+    strip.setPixelColor(8, 0);
+    strip.setPixelColor(9, 0);
+    
+  }
+  strip.show();
 }
 
