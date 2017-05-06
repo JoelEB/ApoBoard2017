@@ -15,7 +15,7 @@
 #define NeoLEDs 10 //was 10 //number of addressable LEDs
 #define Button 2
 
-uint8_t brightness = 10; //global brightness
+uint8_t brightness = 25; //global brightness
 #define BUTTON_PIN 2
 #define debounce_time 10 // button debounce in ms
 // IR Parameters
@@ -637,7 +637,7 @@ void setup()
 {
   uint32_t  PUFhash_result = PUF_hash();
   strip.begin();
-  strip.setBrightness(0xff);
+  strip.setBrightness(30);
   for (int kill = 0; kill < NeoLEDs; kill ++) {
     strip.setPixelColor(kill, 0);
   }
@@ -972,7 +972,7 @@ void NeoEffect_smiley(uint8_t colorsetnum, Colorsets colorset, int period) {
   }
   draw_smiley(face, smiley_rotation, colorsetnum, colorset, period);
   //strip.setBrightness((r % 0x10) + 0x30);
-  strip.setBrightness(30);
+  //strip.setBrightness(30);
   neo.wait(period, strip);
   effect_counterA ++;
   //smiley_rotation ++;
@@ -984,10 +984,37 @@ void draw_smiley(uint8_t LEDimg, uint8_t rot, uint8_t colorsetnum, Colorsets col
     else neo.fadeto( (i + rot) % NeoLEDs , colorset.getBG(0, 0) , period);
   }
 }
+////////////////////////////////////////////////////////////////////////////////
+/*       5
+     4     6
+  3           7
+  2           8
+     1     9
+        0
+*/
+const uint8_t loading_effect_anim[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+#define loading_effect_anim_length 10
+
+void NeoEffect_loading(uint8_t colorsetnum, Colorsets colorset, int period)
+{
+  uint8_t ON = effect_counterA % loading_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % loading_effect_anim_length;
 
 
+  neo.fadeto( loading_effect_anim[ON], colorset.getFG(colorsetnum, 0) , period);
+  neo.fadeto( loading_effect_anim[OFF], colorset.getBG(colorsetnum , 0) , period << 2);
+  neo.wait(period, strip);
+
+  if (ON == 0)
+  {
+    FGcounter ++;
+    BGcounter ++;
+  }
 
 
+  effect_counterA ++;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 uint8_t current_effect = 0;
@@ -1007,6 +1034,7 @@ void loop()
     case 6: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
     case 7: NeoEffect_portal (colorsetnum, colorset, 200); break;
     case 8: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
+    case 9: NeoEffect_loading (colorsetnum, colorset, 200); break;
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
   if (debouncedButtonHeld > 10000) {
