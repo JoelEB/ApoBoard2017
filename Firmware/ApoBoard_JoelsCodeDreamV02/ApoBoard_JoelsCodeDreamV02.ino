@@ -9,7 +9,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h> // Comment out this line for non-AVR boards (Arduino Due, etc.)
 #include "IRSerial-2014.h"
-#define NumEffects 11
+#define NumEffects 12
 #include "colorsets.h"
 
 #define NeoPIN 7// was 10
@@ -1038,10 +1038,48 @@ void NeoEffect_loading(uint8_t colorsetnum, Colorsets colorset, int period)
 
   effect_counterA ++;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
-uint8_t current_effect = 0;
-uint8_t colorsetnum = 6;
+/*       5
+     4     6
+  3           7
+  2           8
+     1     9
+        0
+
+ */
+#define hypnotoad_effect_anim_length 10
+
+void NeoEffect_hypnotoad(uint8_t colorsetnum, Colorsets colorset, int period)
+{
+  uint8_t ON = effect_counterA % hypnotoad_effect_anim_length;
+  uint8_t OFF = (effect_counterA - 1) % hypnotoad_effect_anim_length;
+
+  //All on
+    for (ON = 0; ON < NeoLEDs; ON++)
+    {
+      neo.fadeto( ON, colorset.getFG(colorsetnum, 0), period); //fade in half the time
+      
+      //neo.fadeto( OFF, colorset.getBG(colorsetnum, 0), period << 1); //fade in half the time
+    }
+    neo.wait(period, strip);
+    for (ON = 0; ON < NeoLEDs; ON++)
+    {
+      neo.fadeto( ON, colorset.getBG(colorsetnum, 0), period<<1); //fade in half the time
+      
+      //neo.fadeto( OFF, colorset.getBG(colorsetnum, 0), period << 1); //fade in half the time
+    }
+  neo.wait(period, strip);
+  
+  FGcounter ++;
+  BGcounter ++;
+  effect_counterA ++;
+
+ 
+}
+////////////////////////////////////////////////////////////////////////////////
+
+uint8_t current_effect = 11;
+uint8_t colorsetnum = 7;
 uint32_t next_TX_millis = 0;
 
 void loop()
@@ -1061,8 +1099,9 @@ void loop()
     case 6: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
     case 7: NeoEffect_portal (colorsetnum, colorset, 200); break;
     case 8: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
-    case 9: NeoEffect_smiley (colorsetnum, colorset, 300); break;
+    //case 9: NeoEffect_smiley (colorsetnum, colorset, 300); break;
     case 10: NeoEffect_loading (colorsetnum, colorset, 200); break;
+    case 11: NeoEffect_hypnotoad (colorsetnum, colorset, 300); break;
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
   if (debouncedButtonHeld > 10000) {
