@@ -9,10 +9,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h> // Comment out this line for non-AVR boards (Arduino Due, etc.)
 #include "IRSerial-2014.h"
-<<<<<<< HEAD
-=======
-#define NumEffects 12
->>>>>>> 1171ec419f486ce0f58cb549fb7c2a942e587ed7
+#define NumEffects 10
 #include "colorsets.h"
 
 #define NeoPIN 7// was 10
@@ -74,32 +71,9 @@ class Neo_event {
     boolean setcolor(uint8_t LEDnum, uint32_t Color) {
       LEDnum %= NeoLEDs;
       event_type[LEDnum] = event_setcolor;
-      current_g[LEDnum] = end_g[LEDnum] = init_g[LEDnum] = (Color >> 17) & 0x7F;
-      current_r[LEDnum] = end_r[LEDnum] = init_r[LEDnum] = (Color >> 9) & 0x7F;
-      current_b[LEDnum] = end_b[LEDnum] = init_b[LEDnum] = (Color >> 1) & 0x7F;
-
-    }
-
-    uint32_t getcolor (uint8_t i) {
-      return
-        ((uint32_t)current_g[i] << 16) |
-        ((uint32_t)current_r[i] <<  8) |
-        (uint32_t)current_b[i]
-
-        ;
-    }
-    boolean setcolor_now(uint8_t LEDnum, uint32_t Color, Adafruit_NeoPixel &strip ) {
-      LEDnum %= NeoLEDs;
-      // now instant  was  event_type[LEDnum] = event_setcolor;
-      current_g[LEDnum] = end_g[LEDnum] = init_g[LEDnum] = (Color >> 17) & 0x7F;
-      current_r[LEDnum] = end_r[LEDnum] = init_r[LEDnum] = (Color >> 9) & 0x7F;
-      current_b[LEDnum] = end_b[LEDnum] = init_b[LEDnum] = (Color >> 1) & 0x7F;
-      strip.setPixelColor(LEDnum, strip.Color(
-                            end_g[LEDnum],
-                            end_r[LEDnum],
-                            end_b[LEDnum]
-                          )) ;
-
+      init_g[LEDnum] = (Color >> 17) & 0x7F;
+      init_r[LEDnum] = (Color >> 9) & 0x7F;
+      init_b[LEDnum] = (Color >> 1) & 0x7F;
     }
 
     boolean fadeto(uint8_t LEDnum, uint32_t Color, uint16_t duration) {
@@ -136,15 +110,13 @@ class Neo_event {
     boolean wait(int waitfor, Adafruit_NeoPixel &strip ) {
       waitfor = waitfor > 0 ? waitfor : 0;
       uint32_t returnTime = millis() + waitfor;
+      uint32_t out_color;
       for (int i = 0; i < NeoLEDs; i++) {
         switch (event_type[i]) {
           case event_setcolor :
             event_type[i] = 0;
-            strip.setPixelColor(i, strip.Color(
-                                  end_g[i],
-                                  end_r[i],
-                                  end_b[i]
-                                )) ;
+            out_color = (((uint32_t) init_g[i]) << 16) + (((uint16_t) init_r[i]) << 8) + init_b[i];
+            strip.setPixelColor(i, out_color) ;
             break;
 
           case event_fadeto :
@@ -259,29 +231,12 @@ uint32_t PUF_hash()
   hash = hash0 + (hash1 << 8);
 
   Serial.begin(115200);
-  Serial.println(hash0, HEX);
-  Serial.println(hash1, HEX);
+  //Serial.println(hash0, HEX);
+  //Serial.println(hash1, HEX);
 
   return (hash);
 }
 
-//CRC-8 - based on the CRC8 formulas by Dallas/Maxim
-//code released under the therms of the GNU GPL 3.0 license
-byte CRC8(const byte *data, byte len) {
-  byte crc = 0x00;
-  while (len--) {
-    byte extract = *data++;
-    for (byte tempI = 8; tempI; tempI--) {
-      byte sum = (crc ^ extract) & 0x01;
-      crc >>= 1;
-      if (sum) {
-        crc ^= 0x8C;
-      }
-      extract >>= 1;
-    }
-  }
-  return crc;
-}
 
 // Morse Code constants
 unsigned char const morse[28] PROGMEM = {
@@ -691,10 +646,10 @@ void setup()
   strip.show(); // Initialize all pixels to 'off'
 
   Serial.begin(SERIAL_BAUD);
-  Serial.print("\n");
-  Serial.print(F("PUFhash = "));
-  Serial.print((PUFhash_result >> 16), HEX);
-  Serial.println(PUFhash_result & 0xFFFF, HEX);
+  //Serial.print("\n");
+  //Serial.print(F("PUFhash = "));
+  //Serial.print((PUFhash_result >> 16), HEX);
+  //Serial.println(PUFhash_result & 0xFFFF, HEX);
 
   // Setup various serial ports  // A modified version of SoftwareSerial to handle inverted logic // (Async serial normally idles in the HIGH state, which would burn // through battery on our IR, so inverted logic idles in the LOW state.) // Also modified to modulate output at 38kHz instead of just turning the // LED on.  Otherwise, it's a pretty standard SoftwareSerial library.
   ir.begin(IR_BAUD);
@@ -1006,13 +961,14 @@ void NeoEffect_infinity(uint8_t colorsetnum, Colorsets colorset, int period)
         0
 */
 const uint8_t NumSmileyFaces = 5;
-const uint8_t smileyFaces[NumSmileyFaces][10] = {
+const uint8_t smileyFaces[][10] = {
   {1, 1, 1, 0, 1, 0, 1, 0, 1, 1}, // basic smile and two eyes
   {1, 1, 1, 0, 0, 0, 0, 0, 1, 1}, // no eyes, just smile
   {1, 1, 1, 0, 0, 0, 1, 0, 1, 1}, // smile and left wink
   {1, 1, 1, 0, 1, 0, 0, 0, 1, 1}, // smile and right wink
   {1, 0, 0, 0, 1, 0, 1, 0, 0, 0} // small mouth, two eyes
 };
+uint8_t smiley_buffer [10] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 uint8_t smiley_rotation = 0;
 bool update_smiley = true;
 uint8_t smiley_face = 0;
@@ -1045,15 +1001,7 @@ void NeoEffect_smiley(uint8_t colorsetnum, Colorsets colorset, int period) {
   }
   strip.setBrightness(30);
   if (update_smiley) {
-    for (uint8_t i = 0; i < NeoLEDs; i++) {
-      uint8_t led = (i + smiley_rotation) % NeoLEDs;
-      if (smileyFaces[smiley_face][i])
-        neo.fadeto( led, colorset.getFG(colorsetnum, 0) , period >> 4);
-      else
-        neo.fadeto( led , colorset.getBG(0, 0) , period);
-    }
-
-    // draw_smiley(smiley_face, smiley_rotation, colorsetnum, colorset, period);
+    draw_smiley(smiley_face, smiley_rotation, colorsetnum, colorset, period);
     update_smiley = false;
   }
   neo.wait(period, strip);
@@ -1061,17 +1009,12 @@ void NeoEffect_smiley(uint8_t colorsetnum, Colorsets colorset, int period) {
 }
 
 void draw_smiley(uint8_t LEDimg, uint8_t rot, uint8_t colorsetnum, Colorsets colorset, int period) {
-  Serial.println(LEDimg);
-
-  for (uint8_t i = 0; i < NeoLEDs; i++) {
+  for (uint8_t i = 0; i < 10; i++) {
     uint8_t led = (i + rot) % NeoLEDs;
-    Serial.println(smileyFaces[LEDimg][0]);
-    /*
-      if (smileyFaces[LEDimg][i])
+    if (smileyFaces[LEDimg][i])
       neo.fadeto( led, colorset.getFG(colorsetnum, 0) , period >> 4);
-      else
-       neo.fadeto( led , colorset.getBG(0, 0) , period);
-    */
+    else
+      neo.fadeto( led , colorset.getBG(0, 0) , period);
   }
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -1113,9 +1056,6 @@ void NeoEffect_loading(uint8_t colorsetnum, Colorsets colorset, int period)
      1     9
         0
 
-<<<<<<< HEAD
-uint32_t rgb2color(uint8_t r, uint8_t g, uint8_t b)
-=======
  */
 #define hypnotoad_effect_anim_length 10
 
@@ -1148,176 +1088,52 @@ void NeoEffect_hypnotoad(uint8_t colorsetnum, Colorsets colorset, int period)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-uint8_t current_effect = 2;
+uint8_t current_effect = 0;
 uint8_t colorsetnum = 1;
 uint32_t next_TX_millis = 0;
 
 void loop()
->>>>>>> 1171ec419f486ce0f58cb549fb7c2a942e587ed7
 {
-  return ((((uint32_t) g) << 16) + (((uint16_t) r) << 8) + b);
-}
-
-
-uint8_t poolofradiance_buffers [NeoLEDs][2][3];
-uint8_t poolofradiance_current_buffer = 0;
-void NeoEffect_poolofradiance (uint8_t colorsetnum, Colorsets colorset, int period) {
-  uint8_t poolofradiance_other_buffer = poolofradiance_current_buffer ^ 1;
-  for (uint8_t i = 0; i < NeoLEDs; i++) {
-    for (uint8_t c = 0; c < 3; c++) {
-      uint16_t accumulator =
-        (poolofradiance_buffers[(i - 1) % NeoLEDs] [poolofradiance_current_buffer] [c] >> 2) +
-        (poolofradiance_buffers[(i + 1) % NeoLEDs] [poolofradiance_current_buffer] [c] >> 2) +
-        poolofradiance_buffers[i % NeoLEDs]        [poolofradiance_current_buffer] [c];
-      accumulator >>= 1;
-      poolofradiance_buffers[i] [poolofradiance_other_buffer] [c] = accumulator;
-    }
+  if (millis() > next_TX_millis) {
+    if (!ir.write_SPECTER(0xAA))
+      Serial.println("TX buffer overflow");
+    next_TX_millis = millis() + 500 + random(500);
   }
-<<<<<<< HEAD
-  if (!random(5)) {
-    uint8_t i = random(10);
-    uint32_t color = colorset.getFG(colorsetnum, 0);
-    poolofradiance_buffers[i][poolofradiance_other_buffer][0] = (color >> 16) & 0x7f;
-    poolofradiance_buffers[i][poolofradiance_other_buffer][1] = (color >> 8)  & 0x7f;
-    poolofradiance_buffers[i][poolofradiance_other_buffer][2] =  color       & 0x7f;
-    FGcounter ++;
-  }
-  for (uint8_t i = 0; i < NeoLEDs; i++) {
-    neo.fadeto( i,
-                rgb2color(
-                  poolofradiance_buffers[i][poolofradiance_other_buffer][0] ,
-                  poolofradiance_buffers[i][poolofradiance_other_buffer][1] ,
-                  poolofradiance_buffers[i][poolofradiance_other_buffer][2] ),
-                period);
-  }
-  strip.setBrightness(200);
-  neo.wait(period , strip);
-  poolofradiance_current_buffer ^= 1;
-}
-
-//flash white
-uint32_t NeoEffect_BufferedFlash_buffer [NeoLEDs]; //saves what was there before to fade back to it.
-void NeoEffect_BufferedFlash (uint32_t flashcolor, int period) {
-  for (uint8_t i = 0; i < NeoLEDs; i++) {
-    NeoEffect_BufferedFlash_buffer[i] = neo.getcolor(i);
-    neo.setcolor_now(i, flashcolor , strip);
-  }
-  strip.show();
-  for (uint8_t i = 0; i < NeoLEDs; i++) {
-    neo.fadeto(i, NeoEffect_BufferedFlash_buffer[i], period); // fade back to what was there
-  }
-  neo.wait(period, strip);
-}
-
-#define RXframe_len 5
-uint8_t RXframe [RXframe_len];
-bool RXframe_full = false;
-uint8_t RXframeByte = RXframe_len;
-uint32_t RXframe_valid_until = 0;
-const uint32_t RXframe_valid_timeout = 5000; //5 second time limit on RXframe full
-#define RXframeStartByte 0xFF
-
-uint8_t check_IRRX() {
-  while (ir.available()) {
-    uint8_t rx = ir.read();
-    //Serial.println(rx, HEX);
-    if (!RXframe_full) {
-      if (rx == RXframeStartByte) {
-        RXframeByte = 0;
-        //Serial.println("RX frame start");
-      }
-      if (RXframeByte < RXframe_len) {
-        RXframe[RXframeByte] = rx;
-        RXframeByte ++;
-        //Serial.println(RXframeByte);
-        if (RXframeByte == RXframe_len) {
-          //check for validity
-          if (rx == CRC8(RXframe, RXframe_len - 1)) {
-            Serial.print("Valid RX:");
-            Serial.print(RXframe[1], HEX);
-            Serial.print(",");
-            Serial.print(RXframe[2], HEX);
-            Serial.print(",");
-            Serial.println(RXframe[3], HEX);
-            RXframe_full = true;
-            RXframe_valid_until = millis() + RXframe_valid_timeout;
-            return RXframe[1]; //return command recieved
-          }
-          //else Serial.println("BAD CRC");
-        }
-      }
-      else {
-        //Serial.println("BadStart");
-      }
-    }
-    else if (millis() > RXframe_valid_until) {
-      RXframe_full = false;
-      //Serial.println("RXframe timed out");
-    }
-  }
-  return 0;
-}
-
-#define IRTXcommand_genetics 0x10
-#define IRTXcommand_setgenetics 0x27 //arbitrary id # ;-)
-
-#define TXframe_len 4
-uint8_t TXframe [TXframe_len];
-
-void send_IRTXgenetics(uint16_t genes) {
-  TXframe[0] = RXframeStartByte;
-  TXframe[1] = IRTXcommand_genetics;
-  TXframe[2] = genes >> 8;
-  TXframe[3] = genes & 0xFF;
-  for (uint8_t i = 0; i < TXframe_len; i++) {
-    while (!ir.write_SPECTER(TXframe[i])) {}
-    neo.wait(1, strip); //byte intergap
-  }
-  while (!ir.write_SPECTER(CRC8(TXframe, TXframe_len))) {}
-}
-
-void send_IRTXsetgenetics(uint16_t genes) {
-  TXframe[0] = RXframeStartByte;
-  TXframe[1] = IRTXcommand_setgenetics;
-  TXframe[2] = genes >> 8;
-  TXframe[3] = genes & 0xFF;
-  for (uint8_t i = 0; i < TXframe_len; i++) {
-    while (!ir.write_SPECTER(TXframe[i])) {}
-    neo.wait(1, strip); //byte intergap
-=======
   switch (current_effect) {
-    case 0: IR_diagnostics(); break;
+    //case 0: IR_diagnostics(); break;
     //case 1: NeoEffect_smiley (colorsetnum, colorset, 300); break;
-    case 2: NeoEffect_spider (colorsetnum, colorset, 100); break;
-    case 3: NeoEffect_spider2(colorsetnum, colorset, 25);  break;
-    case 4: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
-    case 5: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
-    case 6: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
-    case 7: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
-    case 8: NeoEffect_portal (colorsetnum, colorset, 200); break;
-    case 9: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
-    case 10: NeoEffect_loading (colorsetnum, colorset, 200); break;
-    case 11: NeoEffect_hypnotoad (colorsetnum, colorset, 300); break;
+ 
+    case 0: NeoEffect_spider (colorsetnum, colorset, 100); break;
+    case 1: NeoEffect_spider2(colorsetnum, colorset, 25);  break;
+    case 2: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
+    case 3: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
+    case 4: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
+    case 5: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
+    case 6: NeoEffect_portal (colorsetnum, colorset, 200); break;
+    case 7: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
+    case 8: NeoEffect_loading (colorsetnum, colorset, 200); break;
+    case 9: NeoEffect_hypnotoad (colorsetnum, colorset, 300); break;
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
+  
   if (debouncedButtonHeld > 10000) {
     debouncedButtonHeld = 0;
+    
     current_effect = (current_effect + 1) % NumEffects;
-    colorsetnum = random(1,13);
     Serial.print("Effect = ");
     Serial.print("\t");
     Serial.println(current_effect);
+    
+    colorsetnum = random(1,13);
     Serial.print("ColorSet = ");
     Serial.print("\t");
     Serial.println(colorsetnum);
->>>>>>> 1171ec419f486ce0f58cb549fb7c2a942e587ed7
   }
-  while (!ir.write_SPECTER(CRC8(TXframe, TXframe_len))) {}
 }
-
 uint32_t diag_valid_until = 0;
 // recieve any byte over IR and display on LEDs
 void IR_diagnostics( void ) {
+
   if (ir.rxdatavalid) {
     diag_valid_until = millis() + 1000;
     uint8_t bin  = ir.rxdata;
@@ -1336,142 +1152,8 @@ void IR_diagnostics( void ) {
     }
     strip.setPixelColor(8, 0);
     strip.setPixelColor(9, 0);
-
+    
   }
   strip.show();
-}
-
-void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
-  switch (current_effect) {
-    case 0: IR_diagnostics(); break;
-    case 1: NeoEffect_spider (colorsetnum, colorset, 100); break;
-    case 2: NeoEffect_spider2(colorsetnum, colorset, 10);  break;
-    case 3: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
-    case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
-    case 5: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
-    case 6: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
-    case 7: NeoEffect_portal (colorsetnum, colorset, 200); break;
-    case 8: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
-    case 9: NeoEffect_smiley (colorsetnum, colorset, 300); break;
-    case 10: NeoEffect_loading (colorsetnum, colorset, 200); break;
-    case 11: NeoEffect_poolofradiance (colorsetnum, colorset, 100); break;
-  }
-}
-
-//TODO:
-//rainbow color
-//explosion effect
-//smiley fix - done
-//ir
-
-////////////////////////////////////////////////////////////////////////////////
-#define NumEffects 12
-uint8_t current_gene = 0;
-uint8_t colorsetnum = 6;
-uint32_t next_TX_millis = 0;
-#define MaxGenes 20
-uint16_t all_genes [MaxGenes]; //effect | colorset
-uint8_t NumGenes = 0;
-
-void loop()
-{
-  if (NumGenes) {
-    if (millis() > next_TX_millis) {
-      send_IRTXgenetics(all_genes[0]); //gene 0 is the "base" gene
-      next_TX_millis = millis() + 500 + random(500);
-    }
-    do_effect( (all_genes[current_gene] >> 8), all_genes[current_gene] & 0xFF);
-  }
-  else {
-    neo.setcolor(0, random(0xFFFFFF)); //random color on led0 == no genes set
-  }
-  uint8_t rx = check_IRRX();
-  if (rx) {
-    uint16_t RXgene = ((uint16_t)RXframe[2] << 8) | RXframe[3];
-    if (rx == IRTXcommand_genetics) {
-      for (uint8_t i = 0; i < NumGenes; i++) { //search for duplicate genes
-        if (all_genes[i] == RXgene) {
-          RXframe_full = false;
-          Serial.print("Already have gene:");
-          Serial.println(RXgene, HEX);
-          break;
-        }
-      }
-      if (RXframe_full) {
-        NeoEffect_BufferedFlash(BRIGHT_WHITE, 1000);
-      }
-    }
-    else if (rx == IRTXcommand_setgenetics) {
-      NeoEffect_BufferedFlash(RED, 1000);
-      NumGenes = 1;
-      all_genes[0] = RXgene;
-      current_gene = 0;
-      Serial.print("Base gene set to:");
-      Serial.println(RXgene, HEX);
-    }
-  }
-  neo.wait(10, strip); //dummy wait to set debuncedButtonState
-  if (debouncedButtonHeld) {
-    if (debouncedButtonHeld < 1e6) {
-      current_gene = (current_gene + 1) % NumGenes;
-      Serial.print("Current ShowGene = ");
-      Serial.println(all_genes[current_gene], HEX);
-    }
-    // when button held for 2 to 5 seconds and we have a RXframe waiting then adopt that frame
-    else if (debouncedButtonHeld >= 1e6 && debouncedButtonHeld < 5e6 && RXframe_full && RXframe[1] == IRTXcommand_genetics) {
-      all_genes[NumGenes] = ((uint16_t)RXframe[2] << 8) | RXframe[3];
-      current_gene = NumGenes; //switch to newly acquire gene
-      Serial.print("New gene learned = ");
-      Serial.println(all_genes[NumGenes]);
-      NumGenes ++;
-      if (NumGenes > MaxGenes) NumGenes = MaxGenes;
-    }
-    // if button held for 10 to 30 seconds then set master mode.
-    else if (debouncedButtonHeld >= 10e6 && debouncedButtonHeld < 30e6) {
-      master_mode_loop();
-    }
-    debouncedButtonHeld = 0; //clear
-  }
-}
-
-bool master_active = true;
-uint8_t current_effect = 0;
-
-void master_mode_loop() {
-  Serial.println("master mode activated");
-  debouncedButtonHeld = 0; //clear
-  while (master_active) {
-    do_effect( current_effect, colorsetnum);
-    check_IRRX();
-    NeoEffect_BufferedFlash(BRIGHT_WHITE, 20); //constantly flash to indicate master mode
-    if (debouncedButtonHeld) {
-      if (debouncedButtonHeld < 1e6) {
-        current_effect = (current_effect + 1) % NumEffects;
-        colorsetnum = random(NumColorsets);
-        Serial.print("Effect = ");
-        Serial.println(current_effect);
-      }
-      // when button held for 1 to 5 seconds then send new gene
-      else if (debouncedButtonHeld >= 1e6 && debouncedButtonHeld < 5e6) {
-        uint16_t gene_out = ((uint16_t)current_effect << 8) | (uint16_t)colorsetnum;
-        debouncedButtonHeld = 0;
-        while (!debouncedButtonHeld) { //keep sending set gene until button is pressed
-          send_IRTXsetgenetics( gene_out );
-          Serial.print("Setgene to:");
-          Serial.println( gene_out, HEX);
-          NeoEffect_BufferedFlash(RED, 500); //flash RED to indicate setGene
-        }
-      }
-      // if button held for 10 to 30 seconds then exit master mode.
-      else if (debouncedButtonHeld >= 10e6 && debouncedButtonHeld < 30e6) {
-        master_active = false;
-      }
-      else {
-        Serial.print("button held?=");
-        Serial.println(debouncedButtonHeld);
-      }
-      debouncedButtonHeld = 0; //clear
-    }
-  }
 }
 
