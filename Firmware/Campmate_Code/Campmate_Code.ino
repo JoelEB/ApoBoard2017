@@ -9,7 +9,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h> // Comment out this line for non-AVR boards (Arduino Due, etc.)
 #include "IRSerial-2014.h"
-#define NumEffects 12
+#define NumEffects 10
 #include "colorsets.h"
 
 #define NeoPIN 7// was 10
@@ -231,8 +231,8 @@ uint32_t PUF_hash()
   hash = hash0 + (hash1 << 8);
 
   Serial.begin(115200);
-  Serial.println(hash0, HEX);
-  Serial.println(hash1, HEX);
+  //Serial.println(hash0, HEX);
+  //Serial.println(hash1, HEX);
 
   return (hash);
 }
@@ -646,10 +646,10 @@ void setup()
   strip.show(); // Initialize all pixels to 'off'
 
   Serial.begin(SERIAL_BAUD);
-  Serial.print("\n");
-  Serial.print(F("PUFhash = "));
-  Serial.print((PUFhash_result >> 16), HEX);
-  Serial.println(PUFhash_result & 0xFFFF, HEX);
+  //Serial.print("\n");
+  //Serial.print(F("PUFhash = "));
+  //Serial.print((PUFhash_result >> 16), HEX);
+  //Serial.println(PUFhash_result & 0xFFFF, HEX);
 
   // Setup various serial ports  // A modified version of SoftwareSerial to handle inverted logic // (Async serial normally idles in the HIGH state, which would burn // through battery on our IR, so inverted logic idles in the LOW state.) // Also modified to modulate output at 38kHz instead of just turning the // LED on.  Otherwise, it's a pretty standard SoftwareSerial library.
   ir.begin(IR_BAUD);
@@ -1088,7 +1088,7 @@ void NeoEffect_hypnotoad(uint8_t colorsetnum, Colorsets colorset, int period)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-uint8_t current_effect = 2;
+uint8_t current_effect = 0;
 uint8_t colorsetnum = 1;
 uint32_t next_TX_millis = 0;
 
@@ -1100,27 +1100,31 @@ void loop()
     next_TX_millis = millis() + 500 + random(500);
   }
   switch (current_effect) {
-    case 0: IR_diagnostics(); break;
+    //case 0: IR_diagnostics(); break;
     //case 1: NeoEffect_smiley (colorsetnum, colorset, 300); break;
-    case 2: NeoEffect_spider (colorsetnum, colorset, 100); break;
-    case 3: NeoEffect_spider2(colorsetnum, colorset, 25);  break;
-    case 4: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
-    case 5: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
-    case 6: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
-    case 7: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
-    case 8: NeoEffect_portal (colorsetnum, colorset, 200); break;
-    case 9: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
-    case 10: NeoEffect_loading (colorsetnum, colorset, 200); break;
-    case 11: NeoEffect_hypnotoad (colorsetnum, colorset, 300); break;
+ 
+    case 0: NeoEffect_spider (colorsetnum, colorset, 100); break;
+    case 1: NeoEffect_spider2(colorsetnum, colorset, 25);  break;
+    case 2: NeoEffect_cylon  (colorsetnum, colorset, 200);  break;
+    case 3: NeoEffect_cylon2 (colorsetnum, colorset, 200);  break;
+    case 4: NeoEffect_zigzag (colorsetnum, colorset, 350);  break;
+    case 5: NeoEffect_infinity(colorsetnum, colorset, 100);  break;
+    case 6: NeoEffect_portal (colorsetnum, colorset, 200); break;
+    case 7: NeoEffect_portal2 (colorsetnum, colorset, 150); break;
+    case 8: NeoEffect_loading (colorsetnum, colorset, 200); break;
+    case 9: NeoEffect_hypnotoad (colorsetnum, colorset, 300); break;
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
+  
   if (debouncedButtonHeld > 10000) {
     debouncedButtonHeld = 0;
+    
     current_effect = (current_effect + 1) % NumEffects;
-    colorsetnum = random(1,13);
     Serial.print("Effect = ");
     Serial.print("\t");
     Serial.println(current_effect);
+    
+    colorsetnum = random(1,13);
     Serial.print("ColorSet = ");
     Serial.print("\t");
     Serial.println(colorsetnum);

@@ -58,7 +58,6 @@ class Colorsets{
     //fire and ice
     {RED, 0x65FF00, ORANGE, YELLOW,           0x8F00FF, CYAN, 0x0800FF, BLUE},
     {0x8F00FF, CYAN, 0x0800FF, BLUE,          RED, 0x65FF00, ORANGE, YELLOW},
-
     //rainbow
     {RED,YELLOW,CYAN,PURPLE,     ORANGE,GREEN,BLUE,MAGENTA},
     //reverse rainbow
