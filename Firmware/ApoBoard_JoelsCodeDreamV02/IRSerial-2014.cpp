@@ -5,10 +5,10 @@
 #include "Arduino.h"
 #include "IRSerial-2014.h"
 
-#define bittime 20
-const uint8_t TX_zerotime = bittime * 1;
+#define bittime 32
+const uint8_t TX_zerotime = bittime >> 1;
 const uint8_t TX_onetime = bittime * 3;
-const uint8_t TX_gaptime = bittime * 2;
+const uint8_t TX_gaptime = bittime * 1;
 const uint8_t TX_starttime = bittime * 4;
 
 
@@ -20,6 +20,9 @@ IRSerial *IRSerial::active_object = 0;
 char IRSerial::_receive_buffer[_SS_MAX_RX_BUFF];
 volatile uint8_t IRSerial::_receive_buffer_tail = 0;
 volatile uint8_t IRSerial::_receive_buffer_head = 0;
+char IRSerial::_transmit_buffer[_SS_MAX_RX_BUFF];
+volatile uint8_t IRSerial::_transmit_buffer_tail = 0;
+volatile uint8_t IRSerial::_transmit_buffer_head = 0;
 
 //
 // Debugging
@@ -64,10 +67,12 @@ bool IRSerial::listen()
 {
   if (active_object != this)
   {
-    _buffer_overflow = false;
+    _RX_buffer_overflow = false;
+    _TX_buffer_overflow = false;
     uint8_t oldSREG = SREG;
     cli();
     _receive_buffer_head = _receive_buffer_tail = 0;
+    _transmit_buffer_head = _transmit_buffer_tail = 0;
     active_object = this;
     SREG = oldSREG;
     return true;
@@ -142,7 +147,7 @@ void IRSerial::recv()
 #if _DEBUG // for scope: pulse pin as overflow indictator
       DebugPulse(_DEBUG_PIN1, 1);
 #endif
-      _buffer_overflow = true;
+      _RX_buffer_overflow = true;
     }
   }
 
@@ -195,8 +200,8 @@ void IRSerial::recv_SPECTER()
   //uint8_t oldSREG = SREG;
   //cli();  // turn off interrupts
   if (*_receivePortRegister & _receiveBitMask) {
-    if (shift_count == 0) {
-      if (elapsed > 200) {
+    if (!shift_count) {
+      if (elapsed > 500) {
         RX_dynabittime = elapsed >> 1;
         shift_in = 0;
         shift_count = 8;
@@ -210,15 +215,24 @@ void IRSerial::recv_SPECTER()
       if (!shift_count) {
         rxdata = shift_in;
         rxdatavalid = true;
-        Serial.println(rxdata, BIN);
+        // if buffer full, set the overflow flag and return
+        if ((_receive_buffer_tail + 1) % _SS_MAX_RX_BUFF != _receive_buffer_head)
+        {
+          // save new data in buffer: tail points to where byte goes
+          _receive_buffer[_receive_buffer_tail] = shift_in; // save new byte
+          _receive_buffer_tail = (_receive_buffer_tail + 1) % _SS_MAX_RX_BUFF;
+        }
+        else
+        {
+          _RX_buffer_overflow = true;
+        }
+
       }
+
     }
 
     //Serial.println(elapsed);
 
-  }
-  else if (elapsed > 10000) {
-    shift_count = 0;
   }
   recv_last_micros = now;
 }
@@ -279,7 +293,8 @@ IRSerial::IRSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic_r
   _rx_delay_intrabit(0),
   _rx_delay_stopbit(0),
   _tx_delay(0),
-  _buffer_overflow(false),
+  _RX_buffer_overflow(false),
+  _TX_buffer_overflow(false),
   _inverse_logic_rx(inverse_logic_rx),
   _inverse_logic_tx(inverse_logic_tx),
   _modulation_frequency(modulation_frequency)
@@ -341,6 +356,35 @@ void IRSerial::end()
 {
   if (digitalPinToPCMSK(_receivePin))
     *digitalPinToPCMSK(_receivePin) &= ~_BV(digitalPinToPCMSKbit(_receivePin));
+}
+
+// Write data to buffer
+size_t IRSerial::write(uint8_t d)
+{
+  if (!isListening())
+    return -1;
+
+  // Empty buffer?
+  if (_transmit_buffer_head == _transmit_buffer_tail)
+    return -1;
+
+  // Write to "tail"
+  // if buffer full, set the overflow flag and return
+  if ((_transmit_buffer_tail + 1) % _SS_MAX_RX_BUFF != _receive_buffer_head)
+  {
+    // save new data in buffer: tail points to where byte goes
+    _transmit_buffer[_transmit_buffer_tail ] = d; // save new byte
+    _transmit_buffer_tail = (_transmit_buffer_tail + 1) % _SS_MAX_RX_BUFF;
+    write_SPECTER(d);
+  }
+  else
+  {
+    _TX_buffer_overflow = true;
+  }
+
+
+
+  return 0;
 }
 
 
@@ -440,62 +484,7 @@ int IRSerial::available()
    While doing serial, set TCCR1A[76] to 00 for
    no output, and 10 for 38kHz output.
 */
-size_t IRSerial::write(uint8_t b)
-{
-  if (_tx_delay == 0) {
-    setWriteError();
-    return 0;
-  }
 
-  uint8_t oldSREG = SREG;
-  cli();  // turn off interrupts for a clean txmit
-
-  // Save current Timer1 values.
-  uint8_t oldTCCR1A = TCCR1A;
-  uint8_t oldTCCR1B = TCCR1B;
-  uint16_t oldTCNT1 = TCNT1;
-  uint16_t oldOCR1A = OCR1A;
-  uint16_t oldICR1 = ICR1;
-
-  // Setup Timer1 for 38kHz. See comments for
-  // definitions of magic values.
-  TCCR1A = (TCCR1A & 0x38) | 0x82;
-  TCCR1B = (TCCR1B & 0xE0) | 0x19;
-  TCNT1 = 0;
-  OCR1A = 210;
-  ICR1 = 421;
-
-  // Write the start bit
-  tx_pin_write(LOW);
-  //tunedDelay(_tx_delay + XMIT_START_ADJUSTMENT);
-
-  // Write each of the 8 bits
-  for (byte mask = 0x01; mask; mask <<= 1)
-  {
-    if (b & mask) // choose bit
-      tx_pin_write(HIGH); // send 1
-    else
-      tx_pin_write(LOW); // send 0
-
-    tunedDelay(_tx_delay); //this sucks and is a waste - blocking delay SPECTER
-  }
-
-  tx_pin_write(HIGH); // restore pin to natural state
-
-  // Return timer back to its original state
-  TCCR1A = oldTCCR1A;
-  TCCR1B = oldTCCR1B;
-  TCNT1 = oldTCNT1;
-  OCR1A = oldOCR1A;
-  ICR1 = oldICR1;
-
-  //Serial.write('A');
-  tunedDelay(_tx_delay);
-  SREG = oldSREG; // turn interrupts back on
-
-  delay(2);  // Added inter-character delay needed to prevent corruption.
-  return 1;
-}
 
 //----------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------
@@ -505,17 +494,6 @@ size_t IRSerial::write(uint8_t b)
 ISR(TIMER1_OVF_vect) {
 };
 
-/*
-  if ontime>0 {ontime --; if (!ontime) TXOUT=0
-  else if offtime>0 {offtime --; if (!offtime) TXOUT=1}
-  else if shiftcounter > 0
-  case
-    sc == 8 { send startbit(3*bittime):: {ontime = 3*bittime} {offtime = bittime}}
-  else
-    if TX_shiftout &= 1 {ontime = 2*bittime} {offtime = 1*bittime}
-    else {ontime = 1*bittime} {offtime = 1*bittime}
-
-*/
 volatile uint8_t TX_shift_counter;
 volatile uint8_t TX_shift_out;
 volatile uint8_t TX_original;

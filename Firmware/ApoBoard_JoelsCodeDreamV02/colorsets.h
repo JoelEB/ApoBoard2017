@@ -50,9 +50,10 @@ uint8_t ColorSets[][4] = {
 };
 #define FAVCOLORS sizeof(ColorSets) / 3
 */
+#define NumColorsets 8
 class Colorsets{
   public:
-  uint32_t colorarray [NumEffects] [8] = {
+  uint32_t colorarray [NumColorsets] [8] = {
     {0xFF0000,0x00FF00,0x0000FF,0x00FFFF,     0,0,0,0}, //coder colorz
     {0xFF3377,0x119933,0x220044,0x880044,     0x110022,0x440022,0x771133,0x004411}, //coder colorz
     {0xFF3377,0x119933,0x220044,0x880044,     0x080011,0x003311,0x110811,0x002208}, //coder colorz
