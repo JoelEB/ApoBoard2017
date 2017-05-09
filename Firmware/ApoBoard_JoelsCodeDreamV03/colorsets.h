@@ -51,28 +51,41 @@ uint8_t ColorSets[][4] = {
 #define FAVCOLORS sizeof(ColorSets) / 3
 */
 #define NumColorsets 8
-class Colorsets{
-  public:
-  uint32_t colorarray [NumColorsets] [8] = {
-    {0xFF0000,0x00FF00,0x0000FF,0x00FFFF,     0,0,0,0}, //coder colorz
+  PROGMEM const uint32_t colorarray [NumColorsets] [8] = { //memopt
+    {0xFF0000,0x00FF00,0x0000FF,0x00FFFF,     0,0,0,0}, //BG is used as BLACK in several effects!
     {0xFF3377,0x119933,0x220044,0x880044,     0x110022,0x440022,0x771133,0x004411}, //coder colorz
     {0xFF3377,0x119933,0x220044,0x880044,     0x080011,0x003311,0x110811,0x002208}, //coder colorz
     {0x00FF00,0x00FF00,0x00FF00,0x00FF00,     0x000200,0x000200,0x000200,0x000200}, //RED only
-    
     {0x38761D,0x351C75,0xE69138,0xC27BA0,     0x110022,0x440022,0x771133,0x004411},
-    {YELLOW,RED,YELLOW,RED,    RED,YELLOW,RED,YELLOW},
-    {TEST,L_RED,YELLOW,ORANGE,    L_BLUE,L_BLUE,L_BLUE,L_BLUE},
-    {PURPLE,ORANGE,YELLOW,GREEN,     AQUA,CERULAN,BLUE_GREEN,CARIBBEAN_CURRENT}
-    
+    {YELLOW,RED,YELLOW,RED,                   RED,YELLOW,RED,YELLOW},
+    {TEST,L_RED,YELLOW,ORANGE,                L_BLUE,L_BLUE,L_BLUE,L_BLUE},
+    {PURPLE,ORANGE,YELLOW,GREEN,              AQUA,CERULAN,BLUE_GREEN,CARIBBEAN_CURRENT}
   };
+
+
+
+
+class Colorsets{
+  public:
   
-  uint32_t getFG(uint8_t colorsetnum, int8_t FGdelta) {
-    FGcounter += FGdelta;
-    return (colorarray[colorsetnum] [FGcounter % 4]);
+  uint32_t getFG(uint8_t colorsetnum) {
+    return pgm_read_dword_near( &( colorarray [colorsetnum] [FGcounter % 4] ) );
+    // was return (colorarray[colorsetnum] [FGcounter % 4]);
   }
-  uint32_t getBG(uint8_t colorsetnum, int8_t BGdelta) {
-    BGcounter += BGdelta;
-    return (colorarray[colorsetnum] [4 + BGcounter % 4]);
+
+  uint32_t getFG(uint8_t colorsetnum, uint8_t offset) {
+    return pgm_read_dword_near( &( colorarray [colorsetnum] [(FGcounter + offset) % 4] ) );
+    // was return (colorarray[colorsetnum] [FGcounter % 4]);
+  }
+
+  uint32_t getBG(uint8_t colorsetnum) {
+    return  pgm_read_dword_near( &( colorarray [colorsetnum] [BGcounter % 4 + 4] ) );
+    //was return (colorarray[colorsetnum] [4 + BGcounter % 4]);
+  }
+
+  uint32_t getBG(uint8_t colorsetnum, uint8_t offset) {
+    return  pgm_read_dword_near( &( colorarray [colorsetnum] [(BGcounter + offset) % 4 + 4] ) );
+    //was return (colorarray[colorsetnum] [4 + BGcounter % 4]);
   }
 };
 
