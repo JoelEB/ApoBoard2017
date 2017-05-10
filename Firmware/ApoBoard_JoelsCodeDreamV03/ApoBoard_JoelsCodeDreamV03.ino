@@ -43,7 +43,7 @@ unsigned long previousMicros = 0 , previousPreviousMicros = 0;
 boolean previousButtonState = NOT_PUSHED;
 boolean debouncedButtonState = NOT_PUSHED;
 unsigned long debouncedButtonHeld = 0;
-boolean bounceState = false;
+boolean bounceState = WATCH_BUTTON;
 
 
 class Neo_event {
@@ -1436,6 +1436,7 @@ void loop()
           Serial.print(F("Already have gene:"));
           Serial.println(RXgene, HEX);
           break;
+     
         }
       }
       if (RXframe_full) {
@@ -1453,17 +1454,20 @@ void loop()
     }
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
+  
   if (debouncedButtonHeld) {
     if (debouncedButtonHeld < 1e6) {
       current_gene = (current_gene + 1) % NumGenes;
       Serial.print(F("Current ShowGene = "));
-      Serial.println(all_genes[current_gene], HEX);
+      Serial.print(all_genes[current_gene], HEX);
+      Serial.print(" / ");
+      Serial.println(NumGenes);
       if (!NumGenes) {
         fill_genes(all_genes, NumEffects, colorsetnum);
         NumGenes = NumEffects;
       }
     }
-    // when button held for 2 to 5 seconds and we have a RXframe waiting then adopt that frame
+    // when button held for 1 to 5 seconds and we have a RXframe waiting then adopt that frame
     else if (debouncedButtonHeld >= 1e6 && debouncedButtonHeld < 5e6 && RXframe_full && RXframe[1] == IRTXcommand_genetics) {
       all_genes[NumGenes] = ((uint16_t)RXframe[2] << 8) | RXframe[3];
 
@@ -1478,10 +1482,11 @@ void loop()
     else if (debouncedButtonHeld >= 10e6 && debouncedButtonHeld < 30e6) {
       master_mode_loop();
     }
-    else if (debouncedButtonHeld >= 60e6 && debouncedButtonHeld < 120e6) {
+    else if (debouncedButtonHeld >= 30e6 && debouncedButtonHeld < 120e6) {
       uint16_t addr = (random(NumGenes) << 1) + eeprom_genes_start;
       EEPROM.write( addr , ~EEPROM.read(addr)); //corrupt genes -- should reset genetable on next boot
       NeoEffect_BufferedFlash(GREEN, 1000);
+      EEPROM.write( eeprom_NumGenes, 0);
     }
     debouncedButtonHeld = 0; //clear
   }
