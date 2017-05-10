@@ -38,23 +38,6 @@ uint8_t FGcounter = 0; //global for Foreground color counter
 #define NumColorSets 14
 
 /*
-<<<<<<< HEAD
-uint8_t ColorSets[][4] = {
-  {232, 100, 255},   // purple
-  {200, 200, 20},   // yellow
-  {30, 200, 200},   // blue
-  {64, 64, 64}   //white
-};
-#define FAVCOLORS sizeof(ColorSets) / 3
-*/
-#define NumColorsets 8
-class Colorsets{
-  public:
-  uint32_t colorarray [NumColorsets] [8] = {
-    {0xFF0000,0x00FF00,0x0000FF,0x00FFFF,     0,0,0,0}, //coder colorz
-    {0xFF3377,0x119933,0x220044,0x880044,     0x110022,0x440022,0x771133,0x004411}, //coder colorz
-    {0xFF3377,0x119933,0x220044,0x880044,     0x080011,0x003311,0x110811,0x002208}, //coder colorz
-=======
  * Good RGB Websites
  * http://arcbotics.com/lessons/mixing-colors-with-the-rgb-led-2/
  * http://www.rapidtables.com/web/color/RGB_Color.htm
@@ -63,7 +46,6 @@ class Colorsets{
   public:
   uint32_t colorarray [NumColorSets] [8] = {
     /*
->>>>>>> 1171ec419f486ce0f58cb549fb7c2a942e587ed7
     {0x00FF00,0x00FF00,0x00FF00,0x00FF00,     0x000200,0x000200,0x000200,0x000200}, //RED only
     */
     {0,0,0,0,     0,0,0,0}, // MUST BE HERE FOR FADE OFF\
