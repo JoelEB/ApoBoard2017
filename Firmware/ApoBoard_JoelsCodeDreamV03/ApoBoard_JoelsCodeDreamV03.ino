@@ -839,7 +839,7 @@ void NeoEffect_spider(uint8_t colorsetnum, Colorsets & colorset, int period,  ui
   neo.fadeto( spider_effect_anim[ON], colorset.getFG(colorsetnum) , period);
   neo.fadeto( spider_effect_anim[OFF], colorset.getBG(colorsetnum) , period >> 1);
   neo.wait(period, strip);
-  if (spider_effect_anim[ON] == 0) {
+  if (ON == 0) {
     FGcounter ++;
     BGcounter ++;
   }
@@ -1133,7 +1133,7 @@ PROGMEM const uint8_t eyeblink[eyeblinkNumFrames][10]  = {  //memopt
 };
 uint8_t current_frame;
 uint8_t eyeframe_counter = 0;
-uint8_t eyeblink_frames [3] = {1,0,1};
+uint8_t eyeblink_frames [3] = {0,1,0};
 
 void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
   uint8_t r = random(25);
@@ -1164,6 +1164,8 @@ void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, u
   strip.show();
   neo.wait(period, strip);
 
+  strip.setBrightness( brightness );
+
   effect_counterA ++;
 }
 
@@ -1176,7 +1178,9 @@ void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, u
      1     9
         0
 */
-const uint8_t loading_effect_anim[] PROGMEM = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}; //memopt
+const uint8_t loading_effect_anim[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};//was:
+//const uint8_t loading_effect_anim[] PROGMEM = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}; //memopt
+//PROGMEM causing issues with this particular animation 
 
 #define loading_effect_anim_length 10
 
@@ -1432,13 +1436,13 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
   switch (current_effect) {
     case 0: NeoEffect_loading (colorsetnum, colorset, 200 ); break;
     case 1: NeoEffect_spider (colorsetnum, colorset, 100,30 ); break;
-    case 2: NeoEffect_spider2(colorsetnum, colorset, 10,30 );  break;
+    case 2: NeoEffect_spider2(colorsetnum, colorset, 25,30 );  break;
     case 3: NeoEffect_cylon  (colorsetnum, colorset, 200,30 );  break;
     case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200,30 );  break;
     case 5: NeoEffect_zigzag (colorsetnum, colorset, 350,30 );  break;
     case 6: NeoEffect_infinity(colorsetnum, colorset, 100,30 );  break;
     case 7: NeoEffect_portal (colorsetnum, colorset, 200,30 ); break;
-    case 8: NeoEffect_portal2 (colorsetnum, colorset, 150,30 ); break;
+    case 8: NeoEffect_portal2 (colorsetnum, colorset, 125,30 ); break;
     case 9: NeoEffect_smiley (colorsetnum, colorset, 300,30 ); break;
     case 10: NeoEffect_poolofradiance (colorsetnum, colorset, 100, 150); break;
     case 11: NeoEffect_eyeblink (colorsetnum, colorset, 200, 30); break;
