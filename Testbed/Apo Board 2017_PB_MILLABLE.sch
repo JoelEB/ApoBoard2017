@@ -3472,6 +3472,7 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <part name="J6" library="SparkFun-Connectors" deviceset="CONN_01" device="PTH_LONGPAD"/>
 <part name="J7" library="SparkFun-Connectors" deviceset="CONN_01" device="PTH_LONGPAD"/>
 <part name="J8" library="SparkFun-Connectors" deviceset="CONN_01" device="PTH_LONGPAD"/>
+<part name="J9" library="SparkFun-Connectors" deviceset="CONN_01" device="PTH_LONGPAD"/>
 <part name="J10" library="SparkFun-Connectors" deviceset="CONN_01" device="PTH_LONGPAD"/>
 <part name="J11" library="SparkFun-Connectors" deviceset="CONN_01" device="PTH_LONGPAD"/>
 <part name="D1" library="SparkFun-LED" deviceset="LED" device="5MM"/>
@@ -3480,8 +3481,6 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <part name="GND1" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="J13" library="SparkFun-Connectors" deviceset="CONN_01" device="PTH_LONGPAD"/>
 <part name="J14" library="SparkFun-Connectors" deviceset="CONN_01" device="PTH_LONGPAD"/>
-<part name="GND2" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
-<part name="GND4" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -3512,11 +3511,12 @@ to test boost circuit</text>
 <instance part="H4" gate="G$1" x="218.44" y="43.18"/>
 <instance part="H5" gate="G$1" x="228.6" y="43.18"/>
 <instance part="H6" gate="G$1" x="236.22" y="43.18"/>
-<instance part="J4" gate="G$1" x="63.5" y="157.48" rot="R180"/>
-<instance part="J5" gate="G$1" x="38.1" y="154.94"/>
+<instance part="J4" gate="G$1" x="40.64" y="154.94"/>
+<instance part="J5" gate="G$1" x="66.04" y="157.48" rot="R180"/>
 <instance part="J6" gate="G$1" x="106.68" y="162.56"/>
 <instance part="J7" gate="G$1" x="129.54" y="162.56" rot="R180"/>
-<instance part="J8" gate="G$1" x="104.14" y="119.38"/>
+<instance part="J8" gate="G$1" x="104.14" y="139.7"/>
+<instance part="J9" gate="G$1" x="129.54" y="139.7" rot="R180"/>
 <instance part="J10" gate="G$1" x="43.18" y="99.06" rot="R180"/>
 <instance part="J11" gate="G$1" x="38.1" y="91.44" rot="R180"/>
 <instance part="D1" gate="G$1" x="175.26" y="139.7" rot="R90"/>
@@ -3525,8 +3525,6 @@ to test boost circuit</text>
 <instance part="GND1" gate="1" x="185.42" y="134.62"/>
 <instance part="J13" gate="G$1" x="104.14" y="129.54"/>
 <instance part="J14" gate="G$1" x="129.54" y="129.54" rot="R180"/>
-<instance part="GND2" gate="1" x="114.3" y="114.3"/>
-<instance part="GND4" gate="1" x="50.8" y="144.78"/>
 </instances>
 <busses>
 </busses>
@@ -3562,29 +3560,6 @@ to test boost circuit</text>
 <pinref part="GND1" gate="1" pin="GND"/>
 <wire x1="180.34" y1="139.7" x2="185.42" y2="139.7" width="0.1524" layer="91"/>
 <wire x1="185.42" y1="139.7" x2="185.42" y2="137.16" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="GND2" gate="1" pin="GND"/>
-<pinref part="J8" gate="G$1" pin="1"/>
-<wire x1="114.3" y1="116.84" x2="114.3" y2="119.38" width="0.1524" layer="91"/>
-<wire x1="114.3" y1="119.38" x2="111.76" y2="119.38" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="J4" gate="G$1" pin="6"/>
-<pinref part="J5" gate="G$1" pin="1"/>
-<wire x1="43.18" y1="149.86" x2="48.26" y2="149.86" width="0.1524" layer="91"/>
-<pinref part="GND4" gate="1" pin="GND"/>
-<wire x1="48.26" y1="149.86" x2="50.8" y2="149.86" width="0.1524" layer="91"/>
-<wire x1="50.8" y1="149.86" x2="58.42" y2="149.86" width="0.1524" layer="91"/>
-<wire x1="50.8" y1="147.32" x2="50.8" y2="149.86" width="0.1524" layer="91"/>
-<junction x="50.8" y="149.86"/>
-<pinref part="J4" gate="G$1" pin="5"/>
-<pinref part="J5" gate="G$1" pin="2"/>
-<wire x1="43.18" y1="152.4" x2="48.26" y2="152.4" width="0.1524" layer="91"/>
-<wire x1="48.26" y1="152.4" x2="58.42" y2="152.4" width="0.1524" layer="91"/>
-<wire x1="48.26" y1="149.86" x2="48.26" y2="152.4" width="0.1524" layer="91"/>
-<junction x="48.26" y="149.86"/>
-<junction x="48.26" y="152.4"/>
 </segment>
 </net>
 <net name="N$2" class="0">
@@ -3639,32 +3614,46 @@ to test boost circuit</text>
 <wire x1="114.3" y1="76.2" x2="106.68" y2="76.2" width="0.1524" layer="91"/>
 </segment>
 </net>
+<net name="N$7" class="0">
+<segment>
+<pinref part="J4" gate="G$1" pin="6"/>
+<pinref part="J5" gate="G$1" pin="1"/>
+<wire x1="60.96" y1="162.56" x2="45.72" y2="162.56" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$8" class="0">
+<segment>
+<pinref part="J4" gate="G$1" pin="5"/>
+<pinref part="J5" gate="G$1" pin="2"/>
+<wire x1="60.96" y1="160.02" x2="45.72" y2="160.02" width="0.1524" layer="91"/>
+</segment>
+</net>
 <net name="N$9" class="0">
 <segment>
 <pinref part="J4" gate="G$1" pin="4"/>
 <pinref part="J5" gate="G$1" pin="3"/>
-<wire x1="43.18" y1="154.94" x2="58.42" y2="154.94" width="0.1524" layer="91"/>
+<wire x1="60.96" y1="157.48" x2="45.72" y2="157.48" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$10" class="0">
 <segment>
 <pinref part="J4" gate="G$1" pin="3"/>
 <pinref part="J5" gate="G$1" pin="4"/>
-<wire x1="43.18" y1="157.48" x2="58.42" y2="157.48" width="0.1524" layer="91"/>
+<wire x1="60.96" y1="154.94" x2="45.72" y2="154.94" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$11" class="0">
 <segment>
 <pinref part="J4" gate="G$1" pin="2"/>
 <pinref part="J5" gate="G$1" pin="5"/>
-<wire x1="43.18" y1="160.02" x2="58.42" y2="160.02" width="0.1524" layer="91"/>
+<wire x1="60.96" y1="152.4" x2="45.72" y2="152.4" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$12" class="0">
 <segment>
 <pinref part="J4" gate="G$1" pin="1"/>
 <pinref part="J5" gate="G$1" pin="6"/>
-<wire x1="43.18" y1="162.56" x2="58.42" y2="162.56" width="0.1524" layer="91"/>
+<wire x1="60.96" y1="149.86" x2="45.72" y2="149.86" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$13" class="0">
@@ -3686,6 +3675,13 @@ to test boost circuit</text>
 <pinref part="J12" gate="G$1" pin="1"/>
 <pinref part="R1" gate="G$1" pin="2"/>
 <wire x1="157.48" y1="139.7" x2="160.02" y2="139.7" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$16" class="0">
+<segment>
+<pinref part="J9" gate="G$1" pin="1"/>
+<pinref part="J8" gate="G$1" pin="1"/>
+<wire x1="111.76" y1="139.7" x2="121.92" y2="139.7" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$17" class="0">
