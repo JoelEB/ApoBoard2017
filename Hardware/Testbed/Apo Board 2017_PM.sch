@@ -1731,90 +1731,6 @@ We've spent an enormous amount of time creating and checking these footprints an
 </deviceset>
 </devicesets>
 </library>
-<library name="SparkFun-Hardware">
-<description>&lt;h3&gt;SparkFun Electronics' preferred foot prints&lt;/h3&gt;
-This library contains board components that are not electrical in nature, such as stand-offs, magnets, and Actobotics. 
-&lt;br&gt;
-&lt;br&gt;
-We've spent an enormous amount of time creating and checking these footprints and parts, but it is &lt;b&gt; the end user's responsibility&lt;/b&gt; to ensure correctness and suitablity for a given componet or application. 
-&lt;br&gt;
-&lt;br&gt;If you enjoy using this library, please buy one of our products at &lt;a href=" www.sparkfun.com"&gt;SparkFun.com&lt;/a&gt;.
-&lt;br&gt;
-&lt;br&gt;
-&lt;b&gt;Licensing:&lt;/b&gt; Creative Commons ShareAlike 4.0 International - https://creativecommons.org/licenses/by-sa/4.0/ 
-&lt;br&gt;
-&lt;br&gt;
-You are welcome to use this library for commercial purposes. For attribution, we ask that when you begin to sell your device using our footprint, you email us with a link to the product being sold. We want bragging rights that we helped (in a very small part) to create your 8th world wonder. We would like the opportunity to feature your device on our homepage.</description>
-<packages>
-<package name="STAND-OFF">
-<description>&lt;h3&gt;Standoff (#4 Screw)&lt;/h3&gt;
-&lt;p&gt;This is the mechanical footprint for a #4 phillips button head screw. Use the keepout ring to avoid running the screw head into surrounding components.&lt;/p&gt;
-&lt;h4&gt;Devices Using&lt;/h4&gt;
-&lt;ul&gt;&lt;li&gt;STAND-OFF&lt;/li&gt;&lt;/ul&gt;</description>
-<wire x1="0" y1="1.8542" x2="0" y2="-1.8542" width="0.2032" layer="41" curve="-180"/>
-<wire x1="0" y1="-1.8542" x2="0" y2="1.8542" width="0.2032" layer="41" curve="-180"/>
-<wire x1="0" y1="-1.8542" x2="0" y2="1.8542" width="0.2032" layer="42" curve="180"/>
-<wire x1="0" y1="-1.8542" x2="0" y2="1.8542" width="0.2032" layer="42" curve="-180"/>
-<circle x="0" y="0" radius="2.794" width="0.127" layer="39"/>
-<hole x="0" y="0" drill="3.302"/>
-<text x="0" y="2.032" size="0.6096" layer="25" font="vector" ratio="20" align="bottom-center">&gt;NAME</text>
-<text x="0" y="-2.032" size="0.6096" layer="27" font="vector" ratio="20" align="top-center">&gt;VALUE</text>
-</package>
-<package name="STAND-OFF-TIGHT">
-<description>&lt;h3&gt;Standoff (#4 Screw) - Tight fit around screw body&lt;/h3&gt;
-&lt;p&gt;This is the mechanical footprint for a #4 phillips button head screw. Use the keepout ring to avoid running the screw head into surrounding components.&lt;/p&gt;
-&lt;h4&gt;Devices Using&lt;/h4&gt;
-&lt;ul&gt;&lt;li&gt;STAND-OFF&lt;/li&gt;&lt;/ul&gt;</description>
-<wire x1="0" y1="1.8542" x2="0" y2="-1.8542" width="0.2032" layer="41" curve="-180"/>
-<wire x1="0" y1="-1.8542" x2="0" y2="1.8542" width="0.2032" layer="41" curve="-180"/>
-<wire x1="0" y1="-1.8542" x2="0" y2="1.8542" width="0.2032" layer="42" curve="180"/>
-<wire x1="0" y1="-1.8542" x2="0" y2="1.8542" width="0.2032" layer="42" curve="-180"/>
-<circle x="0" y="0" radius="2.794" width="0.127" layer="39"/>
-<hole x="0" y="0" drill="3.048"/>
-<text x="0" y="1.651" size="0.6096" layer="25" font="vector" ratio="20" align="bottom-center">&gt;NAME</text>
-<text x="0" y="-1.651" size="0.6096" layer="27" font="vector" ratio="20" align="top-center">&gt;VALUE</text>
-</package>
-</packages>
-<symbols>
-<symbol name="STAND-OFF">
-<description>&lt;h3&gt;Stand-Off Drill Hole&lt;/h3&gt;</description>
-<circle x="0" y="0" radius="1.27" width="0.254" layer="94"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="STAND-OFF" prefix="H">
-<description>&lt;h3&gt;Stand Off&lt;/h3&gt;
-&lt;p&gt;Drill holes for mechanically mounting via screws, standoffs, etc.&lt;/p&gt;
-&lt;p&gt;Note: Use the keepout ring to avoid running the screw head into surrounding components.
-&lt;h4&gt;Variant Overviews&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;b&gt;STAND-OFF&lt;/b&gt; - Mechanical footprint for a &lt;b&gt;#4 phillips button head&lt;/b&gt; screw.&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;STAND-OFF-TIGHT&lt;/b&gt; - Mechanical footprint for a &lt;b&gt;#4 phillips button head&lt;/b&gt; screw, &lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;Example SparkFun Products&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://www.sparkfun.com/products/10453"&gt;Screw - Phillips Head (1/4", 4-40, 10 pack)&lt;/a&gt; (PRT-10453)&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://www.sparkfun.com/products/10452"&gt;Screw - Phillips Head (1/2", 4-40, 10 pack)&lt;/a&gt; (PRT-10452)&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://www.sparkfun.com/products/10451"&gt;Screw - Phillips Head (3/4", 4-40, 10 pack)&lt;/a&gt; (PRT-10451)&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://www.sparkfun.com/products/10450"&gt;Screw - Phillips Head (1", 4-40, 10 pack)&lt;/a&gt; (PRT-10450)&lt;/li&gt;</description>
-<gates>
-<gate name="G$1" symbol="STAND-OFF" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="STAND-OFF">
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-<device name="TIGHT" package="STAND-OFF-TIGHT">
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
 </libraries>
 <attributes>
 </attributes>
@@ -1830,10 +1746,6 @@ You are welcome to use this library for commercial purposes. For attribution, we
 </class>
 </classes>
 <parts>
-<part name="H2" library="SparkFun-Hardware" deviceset="STAND-OFF" device=""/>
-<part name="H3" library="SparkFun-Hardware" deviceset="STAND-OFF" device=""/>
-<part name="H4" library="SparkFun-Hardware" deviceset="STAND-OFF" device=""/>
-<part name="H5" library="SparkFun-Hardware" deviceset="STAND-OFF" device=""/>
 <part name="J4" library="SparkFun-Connectors" deviceset="CONN_06" device="POGOPIN_HOLES_ONLY"/>
 <part name="J6" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
 <part name="J7" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
@@ -1848,6 +1760,10 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <part name="J8" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
 <part name="J9" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
 <part name="J14" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
+<part name="J2" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
+<part name="J15" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
+<part name="J16" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
+<part name="J17" library="SparkFun-Connectors" deviceset="CONN_01" device="POGOPIN_HOLE_0.58"/>
 </parts>
 <sheets>
 <sheet>
@@ -1865,10 +1781,6 @@ to test boost circuit</text>
 <text x="147.32" y="147.32" size="1.778" layer="97">LED to blink for programming success verifiaction </text>
 </plain>
 <instances>
-<instance part="H2" gate="G$1" x="200.66" y="43.18"/>
-<instance part="H3" gate="G$1" x="208.28" y="43.18"/>
-<instance part="H4" gate="G$1" x="218.44" y="43.18"/>
-<instance part="H5" gate="G$1" x="228.6" y="43.18"/>
 <instance part="J4" gate="G$1" x="63.5" y="157.48" rot="R180"/>
 <instance part="J6" gate="G$1" x="106.68" y="162.56"/>
 <instance part="J7" gate="G$1" x="129.54" y="162.56" rot="R180"/>
@@ -1884,29 +1796,14 @@ to test boost circuit</text>
 <instance part="J8" gate="G$1" x="91.44" y="35.56" rot="R180"/>
 <instance part="J9" gate="G$1" x="91.44" y="48.26" rot="R180"/>
 <instance part="J14" gate="G$1" x="91.44" y="58.42" rot="R180"/>
+<instance part="J2" gate="G$1" x="167.64" y="91.44" rot="R180"/>
+<instance part="J15" gate="G$1" x="167.64" y="78.74" rot="R180"/>
+<instance part="J16" gate="G$1" x="167.64" y="66.04" rot="R180"/>
+<instance part="J17" gate="G$1" x="167.64" y="53.34" rot="R180"/>
 </instances>
 <busses>
 </busses>
 <nets>
-<net name="N$13" class="0">
-<segment>
-<pinref part="J7" gate="G$1" pin="1"/>
-<pinref part="J6" gate="G$1" pin="1"/>
-<wire x1="114.3" y1="162.56" x2="121.92" y2="162.56" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$15" class="0">
-<segment>
-<pinref part="J12" gate="G$1" pin="1"/>
-<wire x1="157.48" y1="139.7" x2="160.02" y2="139.7" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$17" class="0">
-<segment>
-<pinref part="J13" gate="G$1" pin="1"/>
-<wire x1="111.76" y1="129.54" x2="121.92" y2="129.54" width="0.1524" layer="91"/>
-</segment>
-</net>
 </nets>
 </sheet>
 </sheets>

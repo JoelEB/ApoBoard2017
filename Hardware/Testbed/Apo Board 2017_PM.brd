@@ -156,19 +156,120 @@
 </layers>
 <board>
 <plain>
-<wire x1="-42.4942" y1="0.0508" x2="42.5958" y2="0.0508" width="0.2032" layer="51" curve="-127.037923"/>
-<wire x1="42.5958" y1="0.0508" x2="-42.4942" y2="0.0508" width="0.2032" layer="51" curve="-127.037923"/>
+<wire x1="-42.4942" y1="0.0508" x2="42.5958" y2="0.0508" width="0.2032" layer="21" curve="-127.037923"/>
+<wire x1="42.5958" y1="0.0508" x2="-42.4942" y2="0.0508" width="0.2032" layer="21" curve="-127.037923"/>
 <text x="4.826" y="-39.751" size="1.778" layer="27" font="vector" ratio="10">Joel Bartlett</text>
-<wire x1="-48.26" y1="30.48" x2="48.26" y2="30.48" width="0.2032" layer="20"/>
-<wire x1="48.26" y1="30.48" x2="48.26" y2="-31.75" width="0.2032" layer="20"/>
-<wire x1="48.26" y1="-31.75" x2="-19.05" y2="-31.75" width="0.2032" layer="20"/>
-<wire x1="-19.05" y1="-31.75" x2="-48.26" y2="-31.75" width="0.2032" layer="20"/>
-<wire x1="-48.26" y1="-31.75" x2="-48.26" y2="30.48" width="0.2032" layer="20"/>
-<wire x1="-43.0022" y1="0.0508" x2="42.9768" y2="0.0508" width="0.2032" layer="20" curve="-127.037923"/>
-<wire x1="42.9768" y1="0.0508" x2="-43.0022" y2="0.0508" width="0.2032" layer="20" curve="-127.037923"/>
-<wire x1="-19.05" y1="-31.75" x2="-19.05" y2="-22.62378125" width="0.2032" layer="20"/>
+<circle x="-2.54" y="1.27" radius="1.27" width="0.4064" layer="51"/>
+<circle x="0" y="1.27" radius="1.27" width="0.4064" layer="51"/>
+<circle x="2.54" y="1.27" radius="1.27" width="0.4064" layer="51"/>
+<circle x="2.54" y="-1.27" radius="1.27" width="0.4064" layer="51"/>
+<circle x="0" y="-1.27" radius="1.27" width="0.4064" layer="51"/>
+<circle x="-2.54" y="-1.27" radius="1.27" width="0.4064" layer="51"/>
+<text x="-3.048" y="6.35" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">MISO</text>
+<text x="-0.508" y="5.461" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">SCK</text>
+<text x="2.032" y="5.461" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">RST</text>
+<text x="0.635" y="13.208" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">5V</text>
+<text x="-4.3815" y="13.2715" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">TX</text>
+<text x="-1.8415" y="13.2715" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">RX</text>
+<text x="-6.858" y="11.557" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90">DTR</text>
+<text x="3.302" y="13.843" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">GND</text>
+<text x="5.842" y="13.843" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">GND</text>
+<text x="15.113" y="15.621" size="0.9398" layer="51" font="vector" ratio="15" rot="MR270" align="bottom-right">A4</text>
+<text x="12.573" y="16.256" size="0.9398" layer="51" font="vector" ratio="15" rot="MR270" align="bottom-right">A5</text>
+<circle x="17.145" y="17.78" radius="0.635" width="0.254" layer="51"/>
+<circle x="14.605" y="18.415" radius="0.635" width="0.254" layer="51"/>
+<circle x="12.065" y="19.05" radius="0.635" width="0.254" layer="51"/>
+<circle x="9.525" y="19.685" radius="0.635" width="0.254" layer="51"/>
+<circle x="-25.4" y="-0.254" radius="0.803215625" width="0.254" layer="51"/>
+<circle x="25.4" y="-0.254" radius="0.772509375" width="0.254" layer="51"/>
+<circle x="-6.35" y="9.7155" radius="1.08694375" width="0.254" layer="51"/>
+<circle x="-3.81" y="9.7155" radius="1.08694375" width="0.254" layer="51"/>
+<circle x="-1.27" y="9.7155" radius="1.08694375" width="0.254" layer="51"/>
+<circle x="1.27" y="9.7155" radius="1.08694375" width="0.254" layer="51"/>
+<circle x="3.81" y="9.7155" radius="1.08694375" width="0.254" layer="51"/>
+<circle x="6.35" y="9.7155" radius="1.08694375" width="0.254" layer="51"/>
+<circle x="-2.54" y="1.27" radius="0.635" width="0.254" layer="51"/>
+<circle x="0" y="1.27" radius="0.635" width="0.254" layer="51"/>
+<circle x="2.54" y="1.27" radius="0.635" width="0.254" layer="51"/>
+<circle x="2.54" y="-1.27" radius="0.635" width="0.254" layer="51"/>
+<circle x="0" y="-1.27" radius="0.635" width="0.254" layer="51"/>
+<circle x="-2.54" y="-1.27" radius="0.635" width="0.254" layer="51"/>
+<text x="17.653" y="18.796" size="0.9398" layer="51" font="vector" ratio="15" rot="MR270" align="bottom-right">GND</text>
+<text x="15.113" y="19.431" size="0.9398" layer="51" font="vector" ratio="15" rot="MR270" align="bottom-right">SDA</text>
+<text x="12.573" y="20.066" size="0.9398" layer="51" font="vector" ratio="15" rot="MR270" align="bottom-right">SCL</text>
+<text x="9.017" y="22.352" size="0.9398" layer="51" font="vector" ratio="15" rot="MR90" align="bottom-right">5V</text>
+<circle x="18.8722" y="-16.3576" radius="1.1447625" width="0.254" layer="51"/>
+<circle x="20.96135" y="-14.61135" radius="1.1447625" width="0.254" layer="51"/>
+<wire x1="-26.035" y1="2.54" x2="-24.765" y2="2.54" width="0.254" layer="51"/>
+<wire x1="24.765" y1="2.54" x2="26.035" y2="2.54" width="0.254" layer="51"/>
+<wire x1="25.4" y1="3.175" x2="25.4" y2="1.905" width="0.254" layer="51"/>
+<wire x1="-48.26" y1="30.48" x2="48.26" y2="30.48" width="0" layer="20"/>
+<wire x1="48.26" y1="30.48" x2="48.26" y2="-31.75" width="0" layer="20"/>
+<wire x1="48.26" y1="-31.75" x2="19.05" y2="-31.75" width="0" layer="20"/>
+<wire x1="-19.05" y1="-31.75" x2="-48.26" y2="-31.75" width="0" layer="20"/>
+<wire x1="-48.26" y1="-31.75" x2="-48.26" y2="30.48" width="0" layer="20"/>
+<wire x1="19.05" y1="-25.4" x2="19.05" y2="-31.75" width="0" layer="20"/>
+<wire x1="-19.05" y1="-31.75" x2="-19.05" y2="-25.4" width="0" layer="20"/>
+<wire x1="-19.05" y1="-25.4" x2="19.05" y2="-25.4" width="0" layer="20"/>
+<circle x="-2.413" y="-17.0942" radius="0.568278125" width="0.254" layer="51"/>
+<circle x="0.635" y="-17.10055" radius="0.568278125" width="0.254" layer="51"/>
+<circle x="-0.89535" y="-17.41805" radius="0.568278125" width="0.254" layer="51"/>
+<circle x="2.159" y="-17.41805" radius="0.568278125" width="0.254" layer="51"/>
 </plain>
 <libraries>
+<library name="SparkFun-Connectors">
+<description>&lt;h3&gt;SparkFun Electronics' preferred foot prints&lt;/h3&gt;
+In this library you'll find connectors and sockets- basically anything that can be plugged into or onto.&lt;br&gt;&lt;br&gt;
+We've spent an enormous amount of time creating and checking these footprints and parts, but it is the end user's responsibility to ensure correctness and suitablity for a given componet or application. If you enjoy using this library, please buy one of our products at www.sparkfun.com.
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;Licensing:&lt;/b&gt; CC v3.0 Share-Alike You are welcome to use this library for commercial purposes. For attribution, we ask that when you begin to sell your device using our footprint, you email us with a link to the product being sold. We want bragging rights that we helped (in a very small part) to create your 8th world wonder. We would like the opportunity to feature your device on our homepage.</description>
+<packages>
+<package name="1X06_HOLES_ONLY">
+<description>&lt;h3&gt; 6 Pin Holes&lt;/h3&gt;
+No silk, no plating
+&lt;p&gt;Specifications:
+&lt;ul&gt;&lt;li&gt;Pin count:6&lt;/li&gt;
+&lt;li&gt;Pin pitch:0.1"&lt;/li&gt;
+&lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;Example device(s):
+&lt;ul&gt;&lt;li&gt;CONN_06&lt;/li&gt;
+&lt;/ul&gt;&lt;/p&gt;</description>
+<circle x="0" y="0" radius="0.635" width="0.127" layer="51"/>
+<circle x="2.54" y="0" radius="0.635" width="0.127" layer="51"/>
+<circle x="5.08" y="0" radius="0.635" width="0.127" layer="51"/>
+<circle x="7.62" y="0" radius="0.635" width="0.127" layer="51"/>
+<circle x="10.16" y="0" radius="0.635" width="0.127" layer="51"/>
+<circle x="12.7" y="0" radius="0.635" width="0.127" layer="51"/>
+<pad name="1" x="0" y="0" drill="0.889" diameter="0.8128" rot="R90"/>
+<pad name="2" x="2.54" y="0" drill="0.889" diameter="0.8128" rot="R90"/>
+<pad name="3" x="5.08" y="0" drill="0.889" diameter="0.8128" rot="R90"/>
+<pad name="4" x="7.62" y="0" drill="0.889" diameter="0.8128" rot="R90"/>
+<pad name="5" x="10.16" y="0" drill="0.889" diameter="0.8128" rot="R90"/>
+<pad name="6" x="12.7" y="0" drill="0.889" diameter="0.8128" rot="R90"/>
+<hole x="0" y="0" drill="1.4732"/>
+<hole x="2.54" y="0" drill="1.4732"/>
+<hole x="5.08" y="0" drill="1.4732"/>
+<hole x="7.62" y="0" drill="1.4732"/>
+<hole x="10.16" y="0" drill="1.4732"/>
+<hole x="12.7" y="0" drill="1.4732"/>
+</package>
+<package name="1X01_POGOPIN_HOLE_0.58_DIA">
+<description>&lt;h3&gt;Pogo Pin Hole - 0.58" &lt;/h3&gt;
+&lt;p&gt;Specifications:
+&lt;ul&gt;&lt;li&gt;Pin count:1&lt;/li&gt;
+&lt;li&gt;Pin pitch:0.58"&lt;/li&gt;
+&lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;Example device(s):
+&lt;ul&gt;&lt;li&gt;CONN_01&lt;/li&gt;
+&lt;/ul&gt;&lt;/p&gt;</description>
+<circle x="0" y="0" radius="0.635" width="0.127" layer="51"/>
+<pad name="1" x="0" y="0" drill="0.9" diameter="0.8128" rot="R90" thermals="no"/>
+<hole x="0" y="0" drill="1.4732"/>
+<text x="-1.27" y="1.143" size="0.6096" layer="25" font="vector" ratio="20">&gt;NAME</text>
+<text x="-1.27" y="-1.778" size="0.6096" layer="27" font="vector" ratio="20">&gt;VALUE</text>
+</package>
+</packages>
+</library>
 <library name="SparkFun-Hardware">
 <description>&lt;h3&gt;SparkFun Electronics' preferred foot prints&lt;/h3&gt;
 This library contains board components that are not electrical in nature, such as stand-offs, magnets, and Actobotics. 
@@ -412,11 +513,30 @@ These rules have been curated by SparkFuns DFM commitee. After doing much resear
 </pass>
 </autorouter>
 <elements>
-<element name="H2" library="SparkFun-Hardware" package="STAND-OFF" value="STAND-OFF" x="-44.45" y="26.67"/>
-<element name="H3" library="SparkFun-Hardware" package="STAND-OFF" value="STAND-OFF" x="44.45" y="26.67"/>
-<element name="H4" library="SparkFun-Hardware" package="STAND-OFF" value="STAND-OFF" x="44.45" y="-27.94"/>
-<element name="H5" library="SparkFun-Hardware" package="STAND-OFF" value="STAND-OFF" x="-44.45" y="-27.94"/>
+<element name="J4" library="SparkFun-Connectors" package="1X06_HOLES_ONLY" value="" x="-6.35" y="9.779">
+<attribute name="PROD_ID" value="CONN-08437" x="-6.35" y="9.779" size="1.778" layer="27" display="off"/>
+</element>
+<element name="J6" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="18.8595" y="-16.383"/>
+<element name="J7" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="20.955" y="-14.605"/>
+<element name="J10" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="25.4" y="-0.254"/>
+<element name="J11" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="-25.4" y="-0.254"/>
+<element name="J12" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="12.065" y="19.05"/>
+<element name="J13" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="9.525" y="19.685"/>
 <element name="FRAME1" library="SparkFun-Aesthetics" package="CREATIVE_COMMONS" value="FRAME-LETTER" x="-26.67" y="-48.26"/>
+<element name="J1" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="-2.54" y="-1.27" rot="R90"/>
+<element name="J3" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="0" y="-1.27" rot="R90"/>
+<element name="J5" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="2.54" y="-1.27" rot="R90"/>
+<element name="J8" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="2.54" y="1.27" rot="R90"/>
+<element name="J9" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="0" y="1.27" rot="R90"/>
+<element name="J14" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="-2.54" y="1.27" rot="R90"/>
+<element name="H1" library="SparkFun-Hardware" package="STAND-OFF" value="STAND-OFF" x="-44.45" y="26.67"/>
+<element name="H6" library="SparkFun-Hardware" package="STAND-OFF" value="STAND-OFF" x="44.45" y="26.67"/>
+<element name="H7" library="SparkFun-Hardware" package="STAND-OFF" value="STAND-OFF" x="44.45" y="-27.94"/>
+<element name="H8" library="SparkFun-Hardware" package="STAND-OFF" value="STAND-OFF" x="-44.45" y="-27.94"/>
+<element name="J2" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="2.159" y="-17.41805"/>
+<element name="J15" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="0.635" y="-17.10055"/>
+<element name="J16" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="-0.89535" y="-17.41805"/>
+<element name="J17" library="SparkFun-Connectors" package="1X01_POGOPIN_HOLE_0.58_DIA" value="" x="-2.413" y="-17.0942"/>
 </elements>
 <signals>
 </signals>
