@@ -229,6 +229,91 @@ class Neo_event {
 //-------------------------------------------------------------------------------------------------
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NeoLEDs, NeoPIN, NEO_GRB + NEO_KHZ800);
+Neo_event neo;
+Colorsets colorset;
+#define MaxEffects 13 // please keep this up-to-date!
+#define eeprom_NumGenes 0
+#define eeprom_CRC16    1 //16-bit checksum of genes
+#define eeprom_genes_start 10
+uint16_t all_genes [MaxGenes]; //effect | colorset
+int8_t NumGenes;
+
+int check_serial_cmd() {
+  static char buffer[4];
+  if (readline(Serial.read(), buffer, 4) != -1) { //forgive me for the return fail value
+    Serial.print(F("CMD: "));
+    Serial.println(buffer);
+    if (!strcmp(buffer, "p"))
+      return serial_cmd_program();
+    else if (!strcmp(buffer, "m"))
+      serial_cmd_lameegg();
+    else if (!strcmp(buffer, "?"))
+      serial_cmd_help();
+    else if (!strcmp(buffer, "r")) {
+      if (EEPROM.read(eeprom_NumGenes) <= MaxGenes) {
+        dump_eeprom_genes();
+
+      }
+      else {
+        Serial.print(F("read error: NumGenes="));
+        Serial.println(NumGenes);
+      }
+    }
+    else if (!strcmp(buffer, "w"))
+      corrupt_gene0();
+    else
+      Serial.println(F("unknown command"));
+  }
+}
+
+void serial_cmd_help() {
+  Serial.println(F("Serial command help:"));
+  Serial.println(F("p : program"));
+  Serial.println(F("r : dump eeprom"));
+  Serial.println(F("w : wipe genes (reversible)"));
+  Serial.println(F("m : fallout 4"));
+}
+
+int serial_cmd_program() {
+  static char buffer[6];
+  Serial.println(F("Program mode.  Enter a gene #"));
+  while (readline(Serial.read(), buffer, 6) < 0) {}
+  int8_t gene = atoi(buffer);
+  if (gene >= 0 && gene < MaxGenes) {
+    Serial.println(F("Enter an effect #"));
+    while (readline(Serial.read(), buffer, 6) < 0) {}
+    int8_t effect = atoi(buffer);
+    if (effect >= 0 && effect < MaxEffects) {
+      Serial.println(F("Enter a colorset #"));
+      while (readline(Serial.read(), buffer, 6) < 0) {}
+      int8_t colorset = atoi(buffer);
+      if (colorset >= 0 && colorset < MaxColorsets) {
+        uint16_t genome = geneof(effect, colorset);
+        Serial.print(F("Setting gene #"));
+        Serial.print(gene);
+        Serial.print(F(" to "));
+        Serial.println(genome, HEX);
+        all_genes[gene] = genome;
+        NumGenes = gene + 1;
+        copy_genes_to_EEPROM(all_genes, NumGenes);
+        return NumGenes;
+
+      }
+    }
+    else return -1;
+  }
+  else return -1;
+}
+
+//no go here. bad code! does not work!
+void serial_cmd_lameegg() {
+  Serial.println(F("Loading"));
+  uint8_t thiscolorset = random(MaxColorsets);
+  while (true) {
+    NeoEffect_loading (thiscolorset, colorset, 200 );
+    Serial.print(F("."));
+  }
+}
 
 #define ENDLINE F("\n")
 
@@ -260,7 +345,7 @@ uint32_t PUF_hash()
 
 //CRC-8 - based on the CRC8 formulas by Dallas/Maxim
 //code released under the therms of the GNU GPL 3.0 license
-byte CRC8(const byte *data, byte len) {
+byte CRC8(const byte * data, byte len) {
   byte crc = 0x00;
   while (len--) {
     byte extract = *data++;
@@ -315,6 +400,49 @@ crc16_update(uint16_t crc, uint8_t a)
 
   return crc;
 }
+
+int8_t readline(uint8_t readch, char *buffer, int len)
+{
+  static uint8_t pos = 0;
+  uint8_t rpos;
+  if (readch != 0xFF) {
+    switch (readch) {
+      case '\n': // Ignore new-lines
+      case '\r': // Return on CR
+        rpos = pos;
+        pos = 0;  // Reset position index ready for next time
+        return rpos;
+      default:
+        if (pos < len - 1) {
+          buffer[pos++] = readch;
+          buffer[pos] = 0;
+        }
+    }
+  }
+  // No end of line has been found, so return -1.
+  return -1;
+}
+
+/* EXAMPLE for readline useage
+  void setup()
+  {
+  Serial.begin(9600);
+  }
+
+  void looq()
+  {
+  static char buffer[80];
+  if (readline(Serial.read(), buffer, 80) > 0) {
+    Serial.print("You entered: >");
+    Serial.print(buffer);
+    Serial.println("<");
+  }
+  }
+
+*/
+
+
+
 // Morse Code constants
 unsigned char const morse[28] PROGMEM = {
   0x05,   // A  .-     00000101
@@ -515,7 +643,7 @@ void clearRxBuf() {
    Alice or Bob.  If it doesn't it returns quickly so you can
    be doing other things (like LED animation!)
 */
-void processIR(unsigned char c, Neo_event &ne) {
+void processIR(unsigned char c, Neo_event & ne) {
   //  Serial.write(c);
   //  Serial.print(" ");
   if (c == 0xFF) return;
@@ -659,7 +787,7 @@ uint8_t convertchartobyte(char cur) {
 
 
 
-void delayAndReadIRSpecter(int pauseFor, Neo_event &ne) {
+void delayAndReadIRSpecter(int pauseFor, Neo_event & ne) {
   pauseFor = pauseFor > 0 ? pauseFor : 0;
   uint32_t returnTime = millis() + pauseFor;
 
@@ -688,16 +816,12 @@ void delayAndReadIRSpecter(int pauseFor, Neo_event &ne) {
 }
 
 
-Neo_event neo;
-Colorsets colorset;
-#define eeprom_NumGenes 0
-#define eeprom_CRC16    1 //16-bit checksum of genes
 /////////////////////////////////////////////////////////////
 /////////////////               /////////////////////////////
 ///////////////// S E T U P     /////////////////////////////
 /////////////////               /////////////////////////////
 /////////////////////////////////////////////////////////////
-uint8_t NumGenes = 0;
+uint8_t current_gene = 0;
 
 void setup()
 {
@@ -710,6 +834,7 @@ void setup()
   strip.show(); // Initialize all pixels to 'off'
 
   Serial.begin(SERIAL_BAUD);
+  Serial.setTimeout(10); //used in check_serial_cmd
   Serial.print("\n");
   Serial.print(F("PUFhash = "));
   Serial.print((PUFhash_result >> 16), HEX);
@@ -721,15 +846,9 @@ void setup()
   digitalWrite(IR_TX, LOW); // For some reason, the TX line starts high and wastes some battery.
   pinMode(IR_RX, INPUT_PULLUP);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  NumGenes = EEPROM.read(eeprom_NumGenes);
-  if (NumGenes <= MaxGenes) {
-    copy_EEPROM_to_genes(NumGenes);
-    if (!dbugprint_genes(((uint16_t)EEPROM.read(eeprom_CRC16) << 8) | EEPROM.read(eeprom_CRC16 + 1)))
-      NumGenes = 0;
-  }
-  else NumGenes = 0;
+  NumGenes = copy_EEPROM_to_genes();
   debouncedButtonHeld = 0;
-  Serial.println("Starting kernel loop");
+  Serial.println("Starting PROPAGAND-EYE kernel:");
 
 }
 /////////////////////////////////////////////////////////////
@@ -839,7 +958,7 @@ void NeoEffect_spider(uint8_t colorsetnum, Colorsets & colorset, int period,  ui
   neo.fadeto( spider_effect_anim[ON], colorset.getFG(colorsetnum) , period);
   neo.fadeto( spider_effect_anim[OFF], colorset.getBG(colorsetnum) , period >> 1);
   neo.wait(period, strip);
-  if (ON == 0) {
+  if (spider_effect_anim[ON] == 0) {
     FGcounter ++;
     BGcounter ++;
   }
@@ -1108,7 +1227,7 @@ void NeoEffect_pacmania(uint8_t colorsetnum, Colorsets & colorset, int period, u
     FGcounter ++;
     BGcounter ++;
   }
-  
+
   for (uint8_t i = 0; i < NeoLEDs; i++) {
     uint8_t led = (i + pacman_rotation) % NeoLEDs;
     uint8_t pixel = pgm_read_byte(&(pacmanFaces[effect_counterA % pacmanNumFrames][i]));
@@ -1133,7 +1252,7 @@ PROGMEM const uint8_t eyeblink[eyeblinkNumFrames][10]  = {  //memopt
 };
 uint8_t current_frame;
 uint8_t eyeframe_counter = 0;
-uint8_t eyeblink_frames [3] = {0,1,0};
+uint8_t eyeblink_frames [3] = {1, 0, 1};
 
 void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
   uint8_t r = random(25);
@@ -1164,8 +1283,6 @@ void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, u
   strip.show();
   neo.wait(period, strip);
 
-  strip.setBrightness( brightness );
-
   effect_counterA ++;
 }
 
@@ -1178,9 +1295,7 @@ void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, u
      1     9
         0
 */
-const uint8_t loading_effect_anim[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};//was:
-//const uint8_t loading_effect_anim[] PROGMEM = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}; //memopt
-//PROGMEM causing issues with this particular animation 
+// optimized away by SPECTER   const uint8_t loading_effect_anim[] PROGMEM = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}; //memopt
 
 #define loading_effect_anim_length 10
 
@@ -1189,9 +1304,9 @@ void NeoEffect_loading (uint8_t colorsetnum, Colorsets & colorset, int period)//
   uint8_t ON = effect_counterA % loading_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % loading_effect_anim_length;
 
-  
-  neo.fadeto( loading_effect_anim[ON], colorset.getFG(colorsetnum) , period);
-  neo.fadeto( loading_effect_anim[OFF], colorset.getBG(colorsetnum) , period << 2);
+
+  neo.fadeto( ON, colorset.getFG(colorsetnum) , period);
+  neo.fadeto( OFF, colorset.getBG(colorsetnum) , period << 2);
   neo.wait(period, strip);
 
   if (ON == 0)
@@ -1201,7 +1316,7 @@ void NeoEffect_loading (uint8_t colorsetnum, Colorsets & colorset, int period)//
   }
 
   strip.setBrightness( brightness );
-  
+
   effect_counterA ++;
 }
 
@@ -1367,25 +1482,30 @@ void IR_diagnostics( void ) {
   strip.show();
 }
 
-#define eeprom_genes_start 10
-uint8_t current_gene = 11;
-uint32_t next_TX_millis = 0;
-uint16_t all_genes [MaxGenes]; //effect | colorset
 
-bool dbugprint_genes(uint16_t gene_crc16 ) {
+bool dump_eeprom_genes(void ) {
+  uint8_t NumGenes = EEPROM.read(eeprom_NumGenes);
   Serial.print(F("EEPROMNumGenes = "));
   Serial.println(NumGenes);
   Serial.println(F("EEPROMGenes:"));
-  for (uint8_t i = 0; i < NumGenes; i++) {
-    Serial.println(all_genes[i] + eeprom_genes_start, HEX);
+  if (NumGenes < MaxGenes) {
+    for (uint8_t i = 0; i < NumGenes; i++) {
+      Serial.print(i, HEX);
+      Serial.print(F(" : "));
+      Serial.println(all_genes[i], HEX);
+    }
   }
-  if (gene_crc16 != CRC16(all_genes, NumGenes)) {
+  uint16_t eeprom_checksum = ( (uint16_t)EEPROM.read(eeprom_CRC16) << 8)
+                             | EEPROM.read(eeprom_CRC16 + 1);
+
+  if ( eeprom_checksum != CRC16(all_genes, NumGenes - 1)) {
     Serial.print(F("BAD CRC:"));
-    Serial.println(gene_crc16, HEX);
+    Serial.println( eeprom_checksum, HEX);
     return (false);
   }
   else {
-    Serial.println(F("CRC OK"));
+    Serial.print(F("CRC OK:"));
+    Serial.println( eeprom_checksum, HEX);
     return (true);
   }
 }
@@ -1394,11 +1514,19 @@ uint16_t geneof(uint8_t effect, uint8_t colorset) {
   return ((uint16_t)effect << 8) | colorset;
 }
 
-void copy_EEPROM_to_genes( uint8_t NumGenes ) {
-  for (uint16_t i = 0; i < NumGenes; i++) {
-    uint16_t addr = (i << 1) + eeprom_genes_start;
-    all_genes[i] = (EEPROM.read( addr ) << 8) | EEPROM.read( addr + 1);
+
+int copy_EEPROM_to_genes() {
+  int NumGenes = EEPROM.read(eeprom_NumGenes);
+  if (NumGenes < MaxGenes) {
+    for (uint16_t i = 0; i < NumGenes; i++) {
+      uint16_t addr = (i << 1) + eeprom_genes_start;
+      all_genes[i] = geneof(EEPROM.read( addr ), EEPROM.read( addr + 1));
+    }
   }
+  else {
+    NumGenes  = 0;
+  }
+  return NumGenes;
 }
 
 
@@ -1416,14 +1544,13 @@ void copy_genes_to_EEPROM(uint16_t all_genes[], uint8_t NumGenes ) {
       EEPROM.write( addr , all_genes[i] & 0xFF);
     }
   }
-  uint16_t crc16  = CRC16(all_genes, NumGenes);
+  uint16_t crc16  = CRC16(all_genes, NumGenes - 1);
   EEPROM.write(eeprom_CRC16, crc16 >> 8);
   EEPROM.write(eeprom_CRC16 + 1, crc16);
   Serial.print(F("Write EEPROM CRC16:"));
   Serial.println(crc16, HEX);
 }
 
-#define NumEffects 13 // please keep this up-to-date!
 
 void fill_genes(uint16_t all_genes[], uint8_t numToCopy, uint8_t colorsetnum) {
   for (uint8_t i = 0; i < numToCopy; i++) {
@@ -1431,24 +1558,27 @@ void fill_genes(uint16_t all_genes[], uint8_t numToCopy, uint8_t colorsetnum) {
   }
 }
 
+void corrupt_gene0() {
+  EEPROM.write( eeprom_genes_start , ~EEPROM.read(eeprom_genes_start)); //corrupt genes -- should reset genetable on next boot
+  copy_EEPROM_to_genes();
+  NeoEffect_BufferedFlash(GREEN, 1000);
+}
 
 void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
   switch (current_effect) {
     case 0: NeoEffect_loading (colorsetnum, colorset, 200 ); break;
-    case 1: NeoEffect_spider (colorsetnum, colorset, 100,30 ); break;
-    case 2: NeoEffect_spider2(colorsetnum, colorset, 25,30 );  break;
-    case 3: NeoEffect_cylon  (colorsetnum, colorset, 200,30 );  break;
-    case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200,30 );  break;
-    case 5: NeoEffect_zigzag (colorsetnum, colorset, 350,30 );  break;
-    case 6: NeoEffect_infinity(colorsetnum, colorset, 100,30 );  break;
-    case 7: NeoEffect_portal (colorsetnum, colorset, 200,30 ); break;
-    case 8: NeoEffect_portal2 (colorsetnum, colorset, 125,30 ); break;
-    case 9: NeoEffect_smiley (colorsetnum, colorset, 300,30 ); break;
+    case 1: NeoEffect_spider (colorsetnum, colorset, 100, 30 ); break;
+    case 2: NeoEffect_spider2(colorsetnum, colorset, 10, 30 );  break;
+    case 3: NeoEffect_cylon  (colorsetnum, colorset, 200, 30 );  break;
+    case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200, 30 );  break;
+    case 5: NeoEffect_zigzag (colorsetnum, colorset, 350, 30 );  break;
+    case 6: NeoEffect_infinity(colorsetnum, colorset, 100, 30 );  break;
+    case 7: NeoEffect_portal (colorsetnum, colorset, 200, 30 ); break;
+    case 8: NeoEffect_portal2 (colorsetnum, colorset, 150, 30 ); break;
+    case 9: NeoEffect_smiley (colorsetnum, colorset, 300, 30 ); break;
     case 10: NeoEffect_poolofradiance (colorsetnum, colorset, 100, 150); break;
     case 11: NeoEffect_eyeblink (colorsetnum, colorset, 200, 30); break;
     case 12: NeoEffect_pacmania (colorsetnum, colorset, 40, 30); break;
-      //case 11: IR_diagnostics(); break;
-
   }
 }
 
@@ -1461,13 +1591,14 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
 
 ////////////////////////////////////////////////////////////////////////////////
 uint8_t colorsetnum = 6;
+uint32_t next_TX_millis = 0;
 
 void loop()
 {
-  if (NumGenes) {
+  if (NumGenes > 0) {
     if (millis() > next_TX_millis) {
       send_IRTXgenetics(all_genes[0]); //gene 0 is the "base" gene  //we could reduce data to save power here
-      next_TX_millis = millis() + 5000 + random(500);
+      next_TX_millis = millis() + 1000 + random(1000);
     }
     do_effect( (all_genes[current_gene] >> 8), all_genes[current_gene] & 0xFF);
 
@@ -1485,7 +1616,7 @@ void loop()
           Serial.print(F("Already have gene:"));
           Serial.println(RXgene, HEX);
           break;
-     
+
         }
       }
       if (RXframe_full) {
@@ -1503,21 +1634,21 @@ void loop()
     }
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
-  
+
   if (debouncedButtonHeld) {
-    if (debouncedButtonHeld < 1e6) {
+    if (debouncedButtonHeld < 1e6 && !RXframe_full) {
       current_gene = (current_gene + 1) % NumGenes;
       Serial.print(F("Current ShowGene = "));
-      Serial.print(all_genes[current_gene], HEX);
-      Serial.print(" / ");
-      Serial.println(NumGenes);
+      Serial.print(current_gene);
+      Serial.print(F(" : "));
+      Serial.println(all_genes[current_gene], HEX);
       if (!NumGenes) {
-        fill_genes(all_genes, NumEffects, colorsetnum);
-        NumGenes = NumEffects;
+        fill_genes(all_genes, MaxEffects, colorsetnum);
+        NumGenes = MaxEffects;
       }
     }
-    // when button held for 1 to 5 seconds and we have a RXframe waiting then adopt that frame
-    else if (debouncedButtonHeld >= 1e6 && debouncedButtonHeld < 5e6 && RXframe_full && RXframe[1] == IRTXcommand_genetics) {
+    // when button held for < 1 second and we have a RXframe waiting then adopt that frame
+    else if (debouncedButtonHeld < 1e6 && RXframe[1] == IRTXcommand_genetics) {
       all_genes[NumGenes] = ((uint16_t)RXframe[2] << 8) | RXframe[3];
 
       current_gene = NumGenes; //switch to newly acquired gene
@@ -1532,13 +1663,12 @@ void loop()
       master_mode_loop();
     }
     else if (debouncedButtonHeld >= 30e6 && debouncedButtonHeld < 120e6) {
-      uint16_t addr = (random(NumGenes) << 1) + eeprom_genes_start;
-      EEPROM.write( addr , ~EEPROM.read(addr)); //corrupt genes -- should reset genetable on next boot
-      NeoEffect_BufferedFlash(GREEN, 1000);
-      EEPROM.write( eeprom_NumGenes, 0);
+      corrupt_gene0();
     }
     debouncedButtonHeld = 0; //clear
   }
+  //added serialport command check to do_effect
+  check_serial_cmd();
 }
 
 bool master_active = true;
@@ -1556,8 +1686,8 @@ void master_mode_loop() {
     }
     if (debouncedButtonHeld) {
       if (debouncedButtonHeld < 1e6) {
-        current_effect = (current_effect + 1) % NumEffects;
-        colorsetnum = random(NumColorsets);
+        current_effect = (current_effect + 1) % MaxEffects;
+        colorsetnum = random(MaxColorsets);
         Serial.print(F("Effect = "));
         Serial.println(current_effect);
       }
