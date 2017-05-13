@@ -372,6 +372,8 @@ uint16_t CRC16(uint16_t arr[], int count)
 
   while (count-- >= 0)
   {
+    //Serial.print("CRC of byte #");
+    //Serial.println(a);
     crc ^= arr[a];
     a ++;
     for (i = 8; i > 0 ; i--) {
@@ -1141,7 +1143,7 @@ void NeoEffect_infinity(uint8_t colorsetnum, Colorsets & colorset, int period,  
         0
 */
 
-const uint8_t NumSmileyFaces PROGMEM = 5;
+#define NumSmileyFaces
 PROGMEM const uint8_t smileyFaces[NumSmileyFaces][10] = {  //memopt
   {1, 1, 1, 0, 1, 0, 1, 0, 1, 1}, // basic smile and two eyes
   {1, 1, 1, 0, 0, 0, 0, 0, 1, 1}, // no eyes, just smile
@@ -1648,15 +1650,15 @@ void loop()
       }
     }
     // when button held for < 1 second and we have a RXframe waiting then adopt that frame
-    else if (debouncedButtonHeld < 1e6 && RXframe[1] == IRTXcommand_genetics) {
-      all_genes[NumGenes] = ((uint16_t)RXframe[2] << 8) | RXframe[3];
-
+    else if (debouncedButtonHeld < 1e6 && RXframe_full && RXframe[1] == IRTXcommand_genetics) {
+      all_genes[NumGenes] = geneof(RXframe[2],RXframe[3]);
       current_gene = NumGenes; //switch to newly acquired gene
       Serial.print(F("New gene learned = "));
-      Serial.println(all_genes[NumGenes]);
+      Serial.println(all_genes[NumGenes],HEX);
       NumGenes ++;
       copy_genes_to_EEPROM( all_genes, NumGenes);
       if (NumGenes > MaxGenes) NumGenes = MaxGenes;
+      RXframe_full = false;
     }
     // if button held for 10 to 30 seconds then set master mode.
     else if (debouncedButtonHeld >= 10e6 && debouncedButtonHeld < 30e6) {
