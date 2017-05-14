@@ -231,7 +231,7 @@ class Neo_event {
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NeoLEDs, NeoPIN, NEO_GRB + NEO_KHZ800);
 Neo_event neo;
 Colorsets colorset;
-#define MaxEffects 13 // please keep this up-to-date!
+#define MaxEffects 14 // please keep this up-to-date!
 #define eeprom_NumGenes 0
 #define eeprom_CRC16    1 //16-bit checksum of genes
 #define eeprom_genes_start 10
@@ -1377,6 +1377,100 @@ void NeoEffect_BufferedFlash (uint32_t flashcolor, int period) {
   neo.wait(period, strip);
 }
 
+
+
+uint8_t pacgame_state = 0;
+int8_t pacgame_pacpos = 5;
+int8_t pacgame_ghostpos = 5;
+bool pacgame_ppstate = true; //power pellet flash state
+
+void NeoEffect_pacgame(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
+  strip.setBrightness(brightness);
+  //script for pacgame:
+  //1: fade in pacman(yellow)(@5) and 5 dots(white)(@6,8,0,2,4)
+  //2: move pacman 3 spaces(6,7,8) eating two dots(6,8) along way
+  //3: qhost(red) emerges
+  //4: pacman(9,0,1,2,3,4) and ghost(5,6,7,8,9,0,1) move forward
+  //5: pacman eats power-pellet(4) ghost turnes blue/lightblue flashing
+  //6: pacman(3,2,1,0,9,8,7,6,5) and flashing ghost(0,9,8,7,6,5) move in oposite direction
+  // That's 22 frames of animation. 220 bytes of table data would be needed.
+  int pacperiod = 0;
+  switch (pacgame_state) {
+    case 0:
+      pacgame_pacpos = 5;
+      for (uint8_t x = 0; x <= 8; x += 2) {
+        neo.fadeto(x, BRIGHT_WHITE, period << 2); //draw dots
+      }
+      neo.fadeto(pacgame_pacpos, YELLOW, period << 2); //draw pukmon
+      neo.wait((period << 1) + period, strip);
+      pacgame_state ++;
+      break;
+    case 1:
+      pacgame_movepac(1, pacperiod);
+      if (pacgame_pacpos == 8) {
+        pacgame_ghostpos = 5;
+        pacgame_state ++;
+      }
+      break;
+    case 2:
+      pacgame_movepac(1, pacperiod);
+      pacgame_moveghost(1, RED, pacperiod);
+      if (pacgame_pacpos == 4) {
+        pacgame_state ++;
+      }
+      break;
+    case 3:
+      pacgame_movepac(-1, pacperiod);
+      pacgame_moveghost(-1, BLUE, pacperiod);
+      Serial.println(pacgame_ghostpos);
+      if (pacgame_ghostpos == 4) {
+        pacgame_state ++;
+        neo.fadeto(pacgame_ghostpos, BLACK, pacperiod);
+      }
+      break;
+    case 4:
+      pacgame_movepac(-1, pacperiod);
+      if (pacgame_pacpos == 5) {
+        pacgame_state = 0;
+      }
+      break;
+  }
+  pacgame_blinkpp(pacperiod);
+  neo.wait(period >> 1, strip);
+  pacgame_blinkpp(pacperiod);
+  neo.wait(period >> 1, strip);
+}
+
+void pacgame_blinkpp(int period) {
+  pacgame_ppstate = pacgame_ppstate ^ 0x1;
+  if (pacgame_state < 3) {
+    if (pacgame_ppstate)
+      neo.fadeto(4, BRIGHT_WHITE, period);
+    else
+      neo.fadeto(4, BLACK, period);
+  }
+}
+
+void pacgame_movepac(int8_t dir, int period) {
+  neo.fadeto(pacgame_pacpos, BLACK, period); //erase pukmon
+  pacgame_pacpos = (pacgame_pacpos + dir) % NeoLEDs;
+  if (pacgame_pacpos < 0) pacgame_pacpos = 9;
+  neo.fadeto(pacgame_pacpos, YELLOW, period); //draw pukmon
+}
+
+void pacgame_moveghost(int8_t dir, uint32_t color, int period) {
+  neo.fadeto(pacgame_ghostpos, BLACK, period); //erase pukmon
+  pacgame_ghostpos = (pacgame_ghostpos + dir) % NeoLEDs;
+  if (pacgame_ghostpos < 0) pacgame_ghostpos = 9;
+  neo.fadeto(pacgame_ghostpos, color, period); //draw pukmon
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////                    ///////////////////////////////////////
+//////////////////////////////////// ir RX & TX callers ///////////////////////////////////////
+////////////////////////////////////                    ///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 #define RXframe_len 5
 uint8_t RXframe [RXframe_len];
 bool RXframe_full = false;
@@ -1581,6 +1675,7 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
     case 10: NeoEffect_poolofradiance (colorsetnum, colorset, 100, 150); break;
     case 11: NeoEffect_eyeblink (colorsetnum, colorset, 200, 30); break;
     case 12: NeoEffect_pacmania (colorsetnum, colorset, 40, 30); break;
+    case 13: NeoEffect_pacgame  (colorsetnum, colorset, 500, 30); break;
   }
 }
 
@@ -1651,10 +1746,10 @@ void loop()
     }
     // when button held for < 1 second and we have a RXframe waiting then adopt that frame
     else if (debouncedButtonHeld < 1e6 && RXframe_full && RXframe[1] == IRTXcommand_genetics) {
-      all_genes[NumGenes] = geneof(RXframe[2],RXframe[3]);
+      all_genes[NumGenes] = geneof(RXframe[2], RXframe[3]);
       current_gene = NumGenes; //switch to newly acquired gene
       Serial.print(F("New gene learned = "));
-      Serial.println(all_genes[NumGenes],HEX);
+      Serial.println(all_genes[NumGenes], HEX);
       NumGenes ++;
       copy_genes_to_EEPROM( all_genes, NumGenes);
       if (NumGenes > MaxGenes) NumGenes = MaxGenes;

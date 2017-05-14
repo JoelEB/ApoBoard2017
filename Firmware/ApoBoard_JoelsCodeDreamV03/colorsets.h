@@ -5,6 +5,7 @@
 
 #define BRIGHT_WHITE      0xFFFFFF
 #define DIM_WHITE         0x555555
+#define BLACK             0x000000
 
 /*
    G..R...B
