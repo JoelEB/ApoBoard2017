@@ -231,7 +231,7 @@ class Neo_event {
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NeoLEDs, NeoPIN, NEO_GRB + NEO_KHZ800);
 Neo_event neo;
 Colorsets colorset;
-#define MaxEffects 14 // please keep this up-to-date!
+#define MaxEffects 15 // please keep this up-to-date!
 #define eeprom_NumGenes 0
 #define eeprom_CRC16    1 //16-bit checksum of genes
 #define eeprom_genes_start 10
@@ -1322,6 +1322,51 @@ void NeoEffect_loading (uint8_t colorsetnum, Colorsets & colorset, int period)//
   effect_counterA ++;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/*       5
+     4     6
+  3           7
+  2           8
+     1     9
+        0
+*/
+void NeoEffect_stephen (uint8_t colorsetnum, Colorsets & colorset, int period)//, uint8_t brightness)
+{
+  uint8_t firstLEDON = effect_counterA % loading_effect_anim_length;
+  uint8_t firstLEDOFF = (effect_counterA - 1) % loading_effect_anim_length;
+
+  uint8_t secondLEDON = ~effect_counterA % loading_effect_anim_length;
+  uint8_t secondLEDOFF = ~(effect_counterA - 1) % loading_effect_anim_length;
+
+
+  neo.fadeto( firstLEDON, colorset.getFG(colorsetnum) , period);
+  neo.fadeto( firstLEDOFF, colorset.getBG(colorsetnum) , period << 2);
+
+  
+  neo.fadeto( secondLEDON, colorset.getFG(colorsetnum) , period);
+  neo.fadeto( secondLEDOFF, colorset.getBG(colorsetnum) , period << 2);
+  neo.wait(period, strip);
+
+  if (firstLEDON == 0)
+  {
+    FGcounter ++;
+    BGcounter ++;
+
+    if(random(10)) {
+      NeoEffect_BufferedFlash(colorset.getFG(colorsetnum), random(250,500));
+      FGcounter++;
+      NeoEffect_BufferedFlash(colorset.getFG(colorsetnum), random(1000, 2000));
+      FGcounter++;
+      NeoEffect_BufferedFlash(colorset.getFG(colorsetnum), 1500);
+    }
+  }
+
+  strip.setBrightness( brightness );
+
+  effect_counterA ++;
+}
+
 uint32_t rgb2color(uint8_t r, uint8_t g, uint8_t b)
 {
   return ((((uint32_t) g) << 16) + (((uint16_t) r) << 8) + b);
@@ -1676,6 +1721,7 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
     case 11: NeoEffect_eyeblink (colorsetnum, colorset, 200, 30); break;
     case 12: NeoEffect_pacmania (colorsetnum, colorset, 40, 30); break;
     case 13: NeoEffect_pacgame  (colorsetnum, colorset, 500, 30); break;
+    case 14: NeoEffect_stephen (colorsetnum, colorset, 70 ); break;
   }
 }
 
