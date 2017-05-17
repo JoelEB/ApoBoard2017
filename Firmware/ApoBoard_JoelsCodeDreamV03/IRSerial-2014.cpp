@@ -174,10 +174,6 @@ void IRSerial::recv()
 // The receive routine called by the interrupt handler
 //
 
-const uint8_t buflen = 16;
-int recv_valbuf[buflen];
-int recv_timebuf[buflen];
-uint8_t recv_buf_head = 0;
 uint32_t recv_last_micros;
 volatile uint8_t
 shift_in = 0,
@@ -190,8 +186,8 @@ volatile uint16_t RX_dynabittime;
 void IRSerial::recv_SPECTER()
 {
   //uint8_t rx = *_receivePortRegister & _receiveBitMask;
-  uint32_t now = micros();
-  uint16_t elapsed = now - recv_last_micros ;
+  long now = micros();
+  int elapsed = now - recv_last_micros ;
   if (TX_pending) {
     shift_count = 0;
     return;
@@ -199,8 +195,8 @@ void IRSerial::recv_SPECTER()
 
   //uint8_t oldSREG = SREG;
   //cli();  // turn off interrupts
-  if (*_receivePortRegister & _receiveBitMask) {
-    if (!shift_count) {
+  if ((uint8_t) *_receivePortRegister & _receiveBitMask) {
+    if (shift_count == 0) {
       if (elapsed > 500) {
         RX_dynabittime = elapsed >> 1;
         shift_in = 0;
@@ -212,7 +208,7 @@ void IRSerial::recv_SPECTER()
       shift_in <<= 1;
       shift_count --;
       if (elapsed > RX_dynabittime) shift_in |= 1;
-      if (!shift_count) {
+      if (shift_count == 0) {
         rxdata = shift_in;
         rxdatavalid = true;
         // if buffer full, set the overflow flag and return
@@ -231,7 +227,6 @@ void IRSerial::recv_SPECTER()
 
     }
 
-    //Serial.println(elapsed);
 
   }
   recv_last_micros = now;
