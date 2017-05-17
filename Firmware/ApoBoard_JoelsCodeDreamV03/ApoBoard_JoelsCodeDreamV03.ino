@@ -245,6 +245,8 @@ int check_serial_cmd() {
     Serial.println(buffer);
     if (!strcmp(buffer, "p"))
       return serial_cmd_program();
+    else if (!strcmp(buffer, "f"))
+      return serial_cmd_fill();
     else if (!strcmp(buffer, "m"))
       serial_cmd_lameegg();
     else if (!strcmp(buffer, "?"))
@@ -264,6 +266,7 @@ int check_serial_cmd() {
     else
       Serial.println(F("unknown command"));
   }
+  return -1;
 }
 
 void serial_cmd_help() {
@@ -271,6 +274,7 @@ void serial_cmd_help() {
   Serial.println(F("p : program"));
   Serial.println(F("r : dump eeprom"));
   Serial.println(F("w : wipe genes (reversible)"));
+  Serial.println(F("f : fill ram-genes with all effects"));
   Serial.println(F("m : fallout 4"));
 }
 
@@ -303,6 +307,23 @@ int serial_cmd_program() {
     else return -1;
   }
   else return -1;
+}
+
+int serial_cmd_fill() {
+  static char buffer[6];
+  Serial.println(F("Fill mode.  Enter a colorset to copy to all genes:"));
+  while (readline(Serial.read(), buffer, 6) < 0) {}
+  int8_t colorset = atoi(buffer);
+  if (colorset >= 0 && colorset < MaxColorsets) {
+    for (uint8_t i = 0; i < MaxEffects; i++) {
+      all_genes[i] = geneof(i, colorset);
+    }
+    return MaxEffects;
+  }
+  else {
+    Serial.println(F("Invalid colorset #"));
+    return -1;
+  }
 }
 
 //no go here. bad code! does not work!
@@ -443,40 +464,6 @@ int8_t readline(uint8_t readch, char *buffer, int len)
 
 */
 
-
-
-// Morse Code constants
-unsigned char const morse[28] PROGMEM = {
-  0x05,   // A  .-     00000101
-  0x18,   // B  -...   00011000
-  0x1A,   // C  -.-.   00011010
-  0x0C,   // D  -..    00001100
-  0x02,   // E  .      00000010
-  0x12,   // F  ..-.   00010010
-  0x0E,   // G  --.    00001110
-  0x10,   // H  ....   00010000
-  0x04,   // I  ..     00000100
-  0x17,   // J  .---   00010111
-  0x0D,   // K  -.-    00001101
-  0x14,   // L  .-..   00010100
-  0x07,   // M  --     00000111
-  0x06,   // N  -.     00000110
-  0x0F,   // O  ---    00001111
-  0x16,   // P  .--.   00010110
-  0x1D,   // Q  --.-   00011101
-  0x0A,   // R  .-.    00001010
-  0x08,   // S  ...    00001000
-  0x03,   // T  -      00000011
-  0x09,   // U  ..-    00001001
-  0x11,   // V  ...-   00010001
-  0x0B,   // W  .--    00001011
-  0x19,   // X  -..-   00011001
-  0x1B,   // Y  -.--   00011011
-  0x1C,   // Z  --..   00011100
-  0x01,   // space     00000001
-  0x5A,   // @  .--.-. 01011010
-};
-
 //debugging macros
 //#define SERIAL_TRACE
 #ifdef SERIAL_TRACE
@@ -523,163 +510,7 @@ unsigned char rxBufNdx(unsigned char p) {
   return rxBuf[(head + p) % RX_BUF_SIZE];
 }
 
-// Turns a 4 byte int (represented here as an array of bytes)
-// into a "modified HEX" string.  tr/0-9a-f/A-P/   Makes it
-// easier to send in morse code.
-void intToStr(uint8_t *src, char *dst) {
-  for (unsigned char ndx = 0; ndx < 8; ndx++) {
-    dst[ndx] = ((src[ndx >> 1] >> (ndx % 2 ? 0 : 4)) & 0x0F) + 'A';
-  }
-  dst[8] = '\0';
-}
 
-void writeWord(uint8_t *buf) {
-  char str[9];
-  intToStr(buf, str);
-  ir.println(str);
-}
-
-/* Processes the received buffer, pulls the 8 character "modified HEX"
-   out of rxBuf[] (head points at the next byte after the end) and packs it into a
-   4 byte array *packedBuf.  If provided, the original 8 "hex" characters
-   are also copied into *strDst.
-   Messages are of the form:   m/(0[xyab])([A-Z0-9]{8})\r\n/
-   $1 is the header and specifies which message it is.
-     0x = Alice's GUID beacon  (Alice -> Bob)
-     0y = Bob's encrypted reply to Alice's GUID beacon  (Bob -> Alice)
-     0a = Bob's GUID (Bob -> Alice, sent immediately after 0y)
-     0b = Alice's encrypted reply to Bob's GUID  (Alice -> Bob)
-     0w = Message from DarkNet Agent after you've solved the 6 part silk screen crypto
-*/
-unsigned char readWordFromBuf(uint8_t *packedBuf, unsigned char *strDst = 0) {
-  // head points to the next character after the \r\n at the end
-  // of our received bytes.  So head-10 points to the beginning of
-  // our message, but it's a circular buffer, so we have to wrap.
-  unsigned char rxNdx = (head - 10) % RX_BUF_SIZE;
-
-  for (unsigned char ndx = 0; ndx < 8; ndx++, inc(&rxNdx)) {
-    unsigned char packedPtr = ndx >> 1;  // index into *packedBuf
-    unsigned char cur = rxBuf[rxNdx]; // current "HEX" character
-
-    // Convert from our modified HEX into the actual nibble value.
-    if (cur >= 'A' && cur <= 'P') {
-      cur -= 'A';
-    } else if (cur >= 'Q' && cur <= 'Z') {
-      cur -= 'Q';
-    } else if (cur >= '0' && cur <= '9') {
-      cur = cur - '0' + 6;
-    } else {
-      Serial.print(F("readWordFromBuf() line noise: "));
-      Serial.println(cur);
-      return 0;  // Line noise.  Return and wait for the next oneo.
-    }
-    packedBuf[packedPtr] <<= 4;  // Shift up the previous nibble, filling with zeros
-    packedBuf[packedPtr] |= (cur & 0x0F); // Add in the current nibble
-
-    // If provided, also copy rxBuf into *strDst.
-    if (strDst) {
-      *(strDst++) = rxBuf[rxNdx];
-    }
-  }
-  return 1;
-}
-
-unsigned char isValidWord() {
-  // Check for valid framing.
-  if (rxBufNdx(-1) != '\n' || rxBufNdx(-2) != '\r' || rxBufNdx(-12) != '0') {
-    // Probably in the middle of receiving, nothing wrong.
-    // Don't log anything, just return.
-    return false;
-  }
-
-  // We have a good framing. Future failures will be reported.
-  char c = rxBufNdx(-11);
-  if (c != 'x' && c != 'y' && c != 'a' && c != 'b') {
-    Serial.println(F("Bad rx header: "));
-    Serial.println(c);
-    return false;
-  }
-  for (int i = -10; i < -2; i++) {
-    c = rxBufNdx(i);
-
-    // If it's not a letter and not a number
-    if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9')) {
-      Serial.println(F("Bad rx data: "));
-      Serial.println(i);
-      Serial.println(F(" "));
-      Serial.println(c);
-      return false;
-    }
-  }
-  return true;
-}
-
-// Reads more characters from the IR and processes them as they come in.
-// This differs from processIR() below in that it waits 5000ms for a message
-// to come in, rather than returning immediately.  So only call this if
-// you're already in the middle of an exchange and know you want to wait.
-unsigned char readWordFromIR() {
-  head = 0;
-  unsigned long start = millis();
-  while (millis() - start < 5000) {  // koop for no more than 5 seconds
-    if (!ir.available())
-      continue;
-    unsigned char c = ir.read(); //old defcon code
-    rxBuf[head] = c;
-    head = (head + 1) % RX_BUF_SIZE;
-    if (isValidWord())
-      return 1;
-  }
-  return 0;
-}
-void clearRxBuf() {
-  for (int ndx = 0; ndx < RX_BUF_SIZE; ndx++)
-    rxBuf[ndx] = '-';
-  head = 0;
-}
-
-/* The IRSerial library feeds us characters as they're received.
-   processIR() puts the character on the buffer and sees
-   if we have a properly formatted IR message. If we
-   do, it kicks off the appropriate process, whether we are
-   Alice or Bob.  If it doesn't it returns quickly so you can
-   be doing other things (like LED animation!)
-*/
-void processIR(unsigned char c, Neo_event & ne) {
-  //  Serial.write(c);
-  //  Serial.print(" ");
-  if (c == 0xFF) return;
-  Serial.write(c); //SPECTER dbug
-  rxBuf[head] = c;
-  head = (head + 1) % RX_BUF_SIZE;
-
-  // isValidWord() will print an error message if it finds
-  // a good header, but an otherwise malformed packet.
-  // Otherwise, a false return code just means it didn't
-  // find a valid packet header, we're probably in the middle
-  // of receiving a packet.
-  if (!isValidWord()) return;
-
-  // SPECTERSignal that we are receiving a packet and attempting an exchange
-  //flashRandom(5, 5);  //delay, clones
-  unsigned char flag = rxBufNdx(-11);
-  int msgAddr = -1;
-  if (flag == 'x') {
-    Serial.println(F("Received Beacon"));
-    uint8_t r =  char2tob(rxBufNdx(-10), rxBufNdx(-9));
-    uint8_t g =  char2tob(rxBufNdx(- 8), rxBufNdx(-7));
-    uint8_t b =  char2tob(rxBufNdx(- 6), rxBufNdx(-5));
-
-    //OLD    neo.event_type = 100; //100 is a dummy positive value
-    //    neo.init_r = r;
-    //    neo.init_g = g;
-    //    neo.init_b = b;
-    //    neo.end_r = neo.end_g = neo.end_b = 0;
-    //    neo.event_millis = 500;
-  }
-
-  clearRxBuf();
-}
 
 unsigned char char2tob(char hexH, char hexL) {
   return ((convertchartobyte(hexH) << 4) + convertchartobyte(hexL));
@@ -789,34 +620,6 @@ uint8_t convertchartobyte(char cur) {
 
 
 
-void delayAndReadIRSpecter(int pauseFor, Neo_event & ne) {
-  pauseFor = pauseFor > 0 ? pauseFor : 0;
-  uint32_t returnTime = millis() + pauseFor;
-
-  while (millis() < returnTime) {
-    /*if (digitalRead(BUTTON_PIN) == LOW) {
-      long buttonStart = millis();
-      while(digitalRead(BUTTON_PIN) == LOW && false) {
-        if (millis() - buttonStart > 2000) {
-          buttonStart = 0;  // Flag to not dump USB
-          break;
-        }
-      }
-
-      if (buttonStart) {
-        // Dump database to USB
-        dumpDatabaseToUSB();
-      }
-      }
-    */
-
-    int ret;
-    if (ret = ir.available()) {
-      processIR(ir.read(), ne); //old defcon code
-    }
-  }
-}
-
 
 /////////////////////////////////////////////////////////////
 /////////////////               /////////////////////////////
@@ -842,7 +645,7 @@ void setup()
   Serial.print((PUFhash_result >> 16), HEX);
   Serial.println(PUFhash_result & 0xFFFF, HEX);
 
-  // Setup various serial ports  // A modified version of SoftwareSerial to handle inverted logic // (Async serial normally idles in the HIGH state, which would burn // through battery on our IR, so inverted logic idles in the LOW state.) // Also modified to modulate output at 38kHz instead of just turning the // LED on.  Otherwise, it's a pretty standard SoftwareSerial library.
+  // Setup various IR and Button ports
   ir.begin(IR_BAUD);
   ir.listen();
   digitalWrite(IR_TX, LOW); // For some reason, the TX line starts high and wastes some battery.
@@ -862,7 +665,7 @@ void setup()
 uint8_t effect_counterA = 0; //global effect_counter for all animations
 
 /////////////////////////////////////////////////////////////
-const uint8_t portal_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
+PROGMEM const uint8_t portal_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {3, 8},
   {4, 9},
   {5, 0},
@@ -880,13 +683,13 @@ void NeoEffect_portal(uint8_t colorsetnum, Colorsets & colorset, int period, uin
   uint8_t ON = effect_counterA % portal_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % portal_effect_anim_length;
 
-  if (portal_effect_anim[ON][0] != 0xFF)
+  if (pgm_read_byte(&(portal_effect_anim[ON][0])) != 0xFF)
   {
-    neo.fadeto( portal_effect_anim[ON][0], colorset.getFG(colorsetnum) , period);
-    neo.fadeto( portal_effect_anim[ON][1], colorset.getFG(colorsetnum) , period);
+    neo.fadeto( pgm_read_byte(&(portal_effect_anim[ON][0])), colorset.getFG(colorsetnum) , period);
+    neo.fadeto( pgm_read_byte(&(portal_effect_anim[ON][1])), colorset.getFG(colorsetnum) , period);
     if ( portal_effect_anim[OFF][0] != 0xFF ) {
-      neo.fadeto( portal_effect_anim[OFF][0], colorset.getBG(colorsetnum) , period);
-      neo.fadeto( portal_effect_anim[OFF][1], colorset.getBG(colorsetnum) , period);
+      neo.fadeto( pgm_read_byte(&(portal_effect_anim[OFF][0])), colorset.getBG(colorsetnum) , period);
+      neo.fadeto( pgm_read_byte(&(portal_effect_anim[OFF][1])), colorset.getBG(colorsetnum) , period);
     }
     neo.wait(period, strip);
   }
@@ -902,15 +705,8 @@ void NeoEffect_portal(uint8_t colorsetnum, Colorsets & colorset, int period, uin
   }
   effect_counterA ++;
 }
-////////////////////////////////////////////////////////////////////////////////
-/*       5
-      4     6
-   3           7
-   2           8
-      1     9
-         0      */
 
-const uint8_t portal2_effect_anim[] = {0, 1, 2, 0xFF, 7, 6, 5, 0xFF, 0, 9, 8, 0xFF, 3, 4, 5, 0xFF};
+PROGMEM const uint8_t portal2_effect_anim[] = {0, 1, 2, 0xFF, 7, 6, 5, 0xFF, 0, 9, 8, 0xFF, 3, 4, 5, 0xFF};
 
 #define portal2_effect_anim_length 16
 
@@ -918,13 +714,12 @@ void NeoEffect_portal2(uint8_t colorsetnum, Colorsets & colorset, int period,  u
 
   uint8_t ON = effect_counterA % portal2_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % portal2_effect_anim_length;
-
-  if (portal2_effect_anim[ON] != 0xFF)
+  if (pgm_read_byte(&(portal2_effect_anim[ON])) != 0xFF)
   {
-    neo.fadeto( portal2_effect_anim[ON], colorset.getFG(colorsetnum) , period);
-    if ( portal2_effect_anim[OFF] != 0xFF )
+    neo.fadeto( pgm_read_byte(&(portal2_effect_anim[ON])), colorset.getFG(colorsetnum) , period);
+    if ( pgm_read_byte(&(portal2_effect_anim[OFF])) != 0xFF )
     {
-      neo.fadeto( portal2_effect_anim[OFF], colorset.getBG(colorsetnum) , period);
+      neo.fadeto( pgm_read_byte(&(portal2_effect_anim[OFF])), colorset.getBG(colorsetnum) , period);
     }
     if (ON == 0)
     {
@@ -946,7 +741,7 @@ void NeoEffect_portal2(uint8_t colorsetnum, Colorsets & colorset, int period,  u
   effect_counterA ++;
 }
 ////////////////////////////////////////////////////////////////////////////////
-const uint8_t spider_effect_anim[] =
+PROGMEM const uint8_t spider_effect_anim[] =
 {5, 2, 7, 4, 9, 6, 1, 8, 3, 0};
 
 
@@ -957,8 +752,8 @@ void NeoEffect_spider(uint8_t colorsetnum, Colorsets & colorset, int period,  ui
   uint8_t ON = effect_counterA % spider_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % spider_effect_anim_length;
 
-  neo.fadeto( spider_effect_anim[ON], colorset.getFG(colorsetnum) , period);
-  neo.fadeto( spider_effect_anim[OFF], colorset.getBG(colorsetnum) , period >> 1);
+  neo.fadeto( pgm_read_byte(&(spider_effect_anim[ON])), colorset.getFG(colorsetnum) , period);
+  neo.fadeto( pgm_read_byte(&(spider_effect_anim[OFF])), colorset.getBG(colorsetnum) , period >> 1);
   neo.wait(period, strip);
   if (spider_effect_anim[ON] == 0) {
     FGcounter ++;
@@ -972,8 +767,8 @@ void NeoEffect_spider2(uint8_t colorsetnum, Colorsets & colorset, int period, ui
   uint8_t ON = effect_counterA % spider_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % spider_effect_anim_length;
 
-  neo.fadeto( spider_effect_anim[ON], colorset.getFG(colorsetnum) , period << 1);
-  neo.fadeto( spider_effect_anim[OFF], colorset.getBG(0) , period);
+  neo.fadeto( pgm_read_byte(&(spider_effect_anim[ON])), colorset.getFG(colorsetnum) , period << 1);
+  neo.fadeto( pgm_read_byte(&(spider_effect_anim[OFF])), colorset.getBG(0) , period);
   neo.wait(period << 1, strip);
   effect_counterA ++;
   FGcounter ++;
@@ -1467,7 +1262,6 @@ void NeoEffect_pacgame(uint8_t colorsetnum, Colorsets & colorset, int period, ui
     case 3:
       pacgame_movepac(-1, pacperiod);
       pacgame_moveghost(-1, BLUE, pacperiod);
-      Serial.println(pacgame_ghostpos);
       if (pacgame_ghostpos == 4) {
         pacgame_state ++;
         neo.fadeto(pacgame_ghostpos, BLACK, pacperiod);
@@ -1488,7 +1282,7 @@ void NeoEffect_pacgame(uint8_t colorsetnum, Colorsets & colorset, int period, ui
 
 void pacgame_blinkpp(int period) {
   pacgame_ppstate = pacgame_ppstate ^ 0x1;
-  if (pacgame_state < 3) {
+  if (pacgame_state && pacgame_state < 3) {
     if (pacgame_ppstate)
       neo.fadeto(4, BRIGHT_WHITE, period);
     else
@@ -1811,7 +1605,8 @@ void loop()
     debouncedButtonHeld = 0; //clear
   }
   //added serialport command check to do_effect
-  check_serial_cmd();
+  int csc_ret = check_serial_cmd();
+  if (csc_ret>0) NumGenes = csc_ret;
 }
 
 bool master_active = true;
