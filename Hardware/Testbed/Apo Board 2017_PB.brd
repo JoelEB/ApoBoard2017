@@ -56,9 +56,9 @@
 <layer number="46" name="Milling" color="3" fill="1" visible="no" active="yes"/>
 <layer number="47" name="Measures" color="7" fill="1" visible="no" active="yes"/>
 <layer number="48" name="Document" color="7" fill="1" visible="no" active="yes"/>
-<layer number="49" name="Reference" color="13" fill="1" visible="no" active="yes"/>
+<layer number="49" name="Reference" color="13" fill="1" visible="yes" active="yes"/>
 <layer number="50" name="dxf" color="7" fill="1" visible="no" active="yes"/>
-<layer number="51" name="tDocu" color="6" fill="1" visible="no" active="yes"/>
+<layer number="51" name="tDocu" color="6" fill="1" visible="yes" active="yes"/>
 <layer number="52" name="bDocu" color="7" fill="1" visible="no" active="yes"/>
 <layer number="53" name="tGND_GNDA" color="7" fill="9" visible="no" active="no"/>
 <layer number="54" name="bGND_GNDA" color="1" fill="9" visible="no" active="no"/>
@@ -418,33 +418,24 @@ We've spent an enormous amount of time creating and checking these footprints an
 &lt;br&gt;
 You are welcome to use this library for commercial purposes. For attribution, we ask that when you begin to sell your device using our footprint, you email us with a link to the product being sold. We want bragging rights that we helped (in a very small part) to create your 8th world wonder. We would like the opportunity to feature your device on our homepage.</description>
 <packages>
-<package name="LED_5MM">
-<description>&lt;B&gt;LED 5mm PTH&lt;/B&gt;&lt;p&gt;
-5 mm, round
-&lt;p&gt;Specifications:
-&lt;ul&gt;&lt;li&gt;Pin count: 2&lt;/li&gt;
-&lt;li&gt;Pin pitch: 0.1inch&lt;/li&gt;
-&lt;li&gt;Diameter: 5mm&lt;/li&gt;
-&lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;Example device(s):
-&lt;ul&gt;&lt;li&gt;LED-IR-THRU&lt;/li&gt;</description>
-<wire x1="2.54" y1="-1.905" x2="2.54" y2="1.905" width="0.2032" layer="22"/>
+<package name="LED5MM">
+<description>&lt;B&gt;LED&lt;/B&gt;&lt;p&gt;
+5 mm, round</description>
+<wire x1="2.54" y1="-1.905" x2="2.54" y2="1.905" width="0.2032" layer="21"/>
+<wire x1="2.54" y1="-1.905" x2="2.54" y2="1.905" width="0.254" layer="21" curve="-286.260205" cap="flat"/>
 <wire x1="-1.143" y1="0" x2="0" y2="1.143" width="0.1524" layer="51" curve="-90" cap="flat"/>
 <wire x1="0" y1="-1.143" x2="1.143" y2="0" width="0.1524" layer="51" curve="90" cap="flat"/>
 <wire x1="-1.651" y1="0" x2="0" y2="1.651" width="0.1524" layer="51" curve="-90" cap="flat"/>
 <wire x1="0" y1="-1.651" x2="1.651" y2="0" width="0.1524" layer="51" curve="90" cap="flat"/>
 <wire x1="-2.159" y1="0" x2="0" y2="2.159" width="0.1524" layer="51" curve="-90" cap="flat"/>
 <wire x1="0" y1="-2.159" x2="2.159" y2="0" width="0.1524" layer="51" curve="90" cap="flat"/>
+<circle x="0" y="0" radius="2.54" width="0.1524" layer="21"/>
 <pad name="A" x="-1.27" y="0" drill="0.8128" diameter="1.8796"/>
 <pad name="K" x="1.27" y="0" drill="0.8128" diameter="1.8796"/>
-<text x="0" y="3.3909" size="0.6096" layer="25" font="vector" ratio="20" align="bottom-center">&gt;NAME</text>
-<text x="0.0254" y="-3.3909" size="0.6096" layer="27" font="vector" ratio="20" align="top-center">&gt;VALUE</text>
-<wire x1="2.54" y1="-1.905" x2="2.54" y2="1.905" width="0.2032" layer="21"/>
-<wire x1="2.54" y1="-1.905" x2="2.54" y2="1.905" width="0.254" layer="21" curve="-286.260205" cap="flat"/>
-<circle x="0" y="0" radius="2.54" width="0.1524" layer="21"/>
-<wire x1="2.54" y1="-1.905" x2="2.54" y2="1.905" width="0.2032" layer="51"/>
+<text x="3.175" y="0.5334" size="1.27" layer="25" ratio="10">&gt;NAME</text>
+<text x="3.2004" y="-1.8034" size="1.27" layer="27" ratio="10">&gt;VALUE</text>
 </package>
-<package name="LED-RGB-THRU-KIT">
+<package name="LED-WS2812-THRU">
 <pad name="2" x="0.889" y="0.5239" drill="0.762" diameter="1.27" shape="offset" rot="R90" stop="no"/>
 <pad name="1" x="2.413" y="0.2064" drill="0.762" diameter="1.27" shape="offset" rot="R270" stop="no"/>
 <pad name="3" x="-0.635" y="0.2064" drill="0.762" diameter="1.27" shape="offset" rot="R270" stop="no"/>
@@ -490,31 +481,43 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <vertex x="3.0226" y="-1.0414" curve="-90"/>
 <vertex x="2.413" y="-1.651" curve="-90"/>
 </polygon>
-<polygon width="0.127" layer="29">
-<vertex x="-2.159" y="0.0635" curve="-90.012891"/>
-<vertex x="-2.6035" y="0.4877" curve="-90"/>
-<vertex x="-2.159" y="0.955" curve="-90"/>
-<vertex x="-1.7171" y="0.4979" curve="-90.012967"/>
-</polygon>
-<polygon width="0.127" layer="29">
-<vertex x="0.889" y="0.0635" curve="-90.012891"/>
-<vertex x="0.4445" y="0.4877" curve="-90"/>
-<vertex x="0.889" y="0.955" curve="-90"/>
-<vertex x="1.3309" y="0.4979" curve="-90.012967"/>
-</polygon>
-<polygon width="0.127" layer="29">
-<vertex x="-0.635" y="-0.254" curve="-90.012891"/>
-<vertex x="-1.0795" y="0.1702" curve="-90"/>
-<vertex x="-0.635" y="0.6375" curve="-90"/>
-<vertex x="-0.1931" y="0.1804" curve="-90.012967"/>
-</polygon>
-<polygon width="0.127" layer="29">
-<vertex x="2.413" y="-0.254" curve="-90.012891"/>
-<vertex x="1.9685" y="0.1702" curve="-90"/>
-<vertex x="2.413" y="0.6375" curve="-90"/>
-<vertex x="2.8549" y="0.1804" curve="-90.012967"/>
-</polygon>
 <wire x1="-0.889" y1="1.3335" x2="-0.381" y2="1.3335" width="0.127" layer="21"/>
+<polygon width="0.2032" layer="29">
+<vertex x="-2.7686" y="0.5334"/>
+<vertex x="-2.7686" y="1.8288" curve="-90"/>
+<vertex x="-2.2098" y="2.3876"/>
+<vertex x="-2.159" y="2.3876" curve="-90"/>
+<vertex x="-1.5494" y="1.778"/>
+<vertex x="-1.5494" y="0.5334" curve="-90"/>
+<vertex x="-2.159" y="-0.0762" curve="-90"/>
+</polygon>
+<polygon width="0.2032" layer="29">
+<vertex x="-1.2446" y="-1.0668"/>
+<vertex x="-1.2446" y="0.2286" curve="-90"/>
+<vertex x="-0.6858" y="0.7874"/>
+<vertex x="-0.635" y="0.7874" curve="-90"/>
+<vertex x="-0.0254" y="0.1778"/>
+<vertex x="-0.0254" y="-1.0668" curve="-90"/>
+<vertex x="-0.635" y="-1.6764" curve="-90"/>
+</polygon>
+<polygon width="0.2032" layer="29">
+<vertex x="0.2794" y="0.5334"/>
+<vertex x="0.2794" y="1.8288" curve="-90"/>
+<vertex x="0.8382" y="2.3876"/>
+<vertex x="0.889" y="2.3876" curve="-90"/>
+<vertex x="1.4986" y="1.778"/>
+<vertex x="1.4986" y="0.5334" curve="-90"/>
+<vertex x="0.889" y="-0.0762" curve="-90"/>
+</polygon>
+<polygon width="0.2032" layer="29">
+<vertex x="1.8034" y="-1.0414"/>
+<vertex x="1.8034" y="0.254" curve="-90"/>
+<vertex x="2.3622" y="0.8128"/>
+<vertex x="2.413" y="0.8128" curve="-90"/>
+<vertex x="3.0226" y="0.2032"/>
+<vertex x="3.0226" y="-1.0414" curve="-90"/>
+<vertex x="2.413" y="-1.651" curve="-90"/>
+</polygon>
 </package>
 </packages>
 </library>
@@ -788,15 +791,15 @@ These rules have been curated by SparkFuns DFM commitee. After doing much resear
 <element name="J8" library="SparkFun-Connectors" package="1X01_LONGPAD" value="" x="43.18" y="-12.065" rot="R90"/>
 <element name="J10" library="SparkFun-Connectors" package="1X01_LONGPAD" value="" x="25.4" y="-0.254"/>
 <element name="J11" library="SparkFun-Connectors" package="1X01_LONGPAD" value="" x="-25.4" y="-0.254"/>
-<element name="D1" library="SparkFun-LED" package="LED_5MM" value="" x="-33.02" y="-38.1"/>
+<element name="D1" library="SparkFun-LED" package="LED5MM" value="" x="-33.02" y="-38.1"/>
 <element name="R1" library="SparkFun-Resistors" package="AXIAL-0.3-KIT" value=" " x="-35.56" y="-26.67" rot="R90">
 <attribute name="PROD_ID" value=" " x="-35.56" y="-26.67" size="1.778" layer="27" font="vector" ratio="15" rot="R90" display="off"/>
 </element>
 <element name="J12" library="SparkFun-Connectors" package="1X01_LONGPAD" value="" x="12.065" y="19.05"/>
 <element name="J13" library="SparkFun-Connectors" package="1X01_LONGPAD" value="" x="9.525" y="19.685"/>
 <element name="J14" library="SparkFun-Connectors" package="1X01_LONGPAD" value="" x="43.18" y="-3.81" rot="R90"/>
-<element name="U6" library="SparkFun-LED" package="LED-RGB-THRU-KIT" value="" x="0" y="-16.891" rot="R180"/>
-<element name="U7" library="SparkFun-LED" package="LED-RGB-THRU-KIT" value="" x="-25.4" y="-30.48" rot="R180"/>
+<element name="U6" library="SparkFun-LED" package="LED-WS2812-THRU" value="LED-TRICOLOR-5050-ICWS2812" x="0" y="-16.891" rot="R180"/>
+<element name="U7" library="SparkFun-LED" package="LED-WS2812-THRU" value="LED-TRICOLOR-5050-ICWS2812" x="-25.4" y="-30.48" rot="R180"/>
 </elements>
 <signals>
 <signal name="GND">
