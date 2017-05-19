@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include <avr/pgmspace.h>
-
+// 1b26 - 1dc0
 #include <EEPROM.h>
 #include <avr/sleep.h>
 #include <Wire.h>
@@ -1506,6 +1506,7 @@ void loop()
           RXframe_full = false;
           Serial.print(F("Already have gene:"));
           Serial.println(RXgene, HEX);
+          NeoEffect_BufferedFlash(RED, 500);
           break;
 
         }

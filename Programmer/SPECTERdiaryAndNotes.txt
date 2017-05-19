@@ -1,0 +1,112 @@
+getting avrisp mkii working in kali-linux:
+
+copy these rules to a new /etc/udev/avrisp.rules:
+SUBSYSTEM!="usb", ACTION!="add", GOTO="avrisp_end"
+
+# Atmel Corp. JTAG ICE mkII
+ATTR{idVendor}=="03eb", ATTR{idProduct}=="2103", MODE="660", GROUP="dialout"
+# Atmel Corp. AVRISP mkII
+ATTR{idVendor}=="03eb", ATTR{idProduct}=="2104", MODE="660", GROUP="dialout"
+# Atmel Corp. Dragon
+ATTR{idVendor}=="03eb", ATTR{idProduct}=="2107", MODE="660", GROUP="dialout"
+
+LABEL="avrisp_end"
+
+
+i used nano to do this
+root@xfinitywifi:~# nano /etc/udev/avrisp.rules
+root@xfinitywifi:~# cd /etc/udev/rules.d/
+root@xfinitywifi:/etc/udev/rules.d# ln ../avrisp.rules 60-avrisp.rules
+root@xfinitywifi:/etc/udev/rules.d# groups
+root
+root@xfinitywifi:/etc/udev/rules.d# service udev restart
+
+failed
+
+tried:
+apt-get install uisp
+
+and changing SYSFS too ATTR... no that was fine nvm
+
+used this for debugging:
+avrdude -c avrispmkII -P usb -p m328 -B 100 -v
+ls -lrt /dev/*
+dmesg | tail
+
+
+okay got it to work when I also applied power @ ftdi at same time.
+does power have to be provided seperately from avrisp?  That seems silly.
+maybe theres an option to turn power pin on.
+anyway... i did successfully read the eeprom using:
+avrdude -c avrispmkII -P usb -p m328  -U eeprom:r:eepromtestread.hex:i -v -F
+
+now to script it.
+i found one python wrapper on github :-)  with a single contributor :-(
+https://github.com/theterg/autoavrdude
+this is pretty crude shell-parsing stuff... as the author admits.
+
+here's the code:
+from subprocess import Popen, PIPE
+import threading
+import fcntl
+import os
+import Queue
+
+def setNonBlocking(fd):
+    """
+    Set the file description of the given file descriptor to non-blocking.
+    """
+    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    flags = flags | os.O_NONBLOCK
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags)
+
+def reader(fd, queue):
+    while True:
+        try:
+            data = fd.read()
+            queue.put(data)
+        except IOError:
+            continue
+        except Exception:
+            return
+
+def flushAndWrite(msg, p):
+    p.stdout.flush()
+    p.stderr.flush()
+    p.stdin.write(msg)
+    p.stdin.flush()
+
+def writeAndReadResponse(msg, infd, outfd):
+    outfd.flush()
+    infd.write(msg)
+    infd.flush()
+    while True:
+        try:
+            return outfd.read()
+        except IOError:
+            continue
+        except KeyboardInterrupt:
+            return ''
+
+
+def getVtarget(msg):
+    lines = msg.split('\n')
+    for line in lines:
+        if line.startswith('Vtarget'):
+            return float(line.split(':')[1][:-2])
+    return 0.0
+
+p = Popen("avrdude -c avrispmkii -p m328p -P usb -F -t", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+setNonBlocking(p.stdout)
+setNonBlocking(p.stderr)
+
+#outqueue = Queue.Queue()
+#errqueue = Queue.Queue()
+#
+#outthread = threading.Thread(target=reader, args=(p.stdout, outqueue))
+#errthread = threading.Thread(target=reader, args=(p.stderr, errqueue))
+#
+#outthread.start()
+#errthread.start()
+
+
