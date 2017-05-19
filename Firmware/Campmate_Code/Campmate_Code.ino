@@ -1088,7 +1088,7 @@ void NeoEffect_hypnotoad(uint8_t colorsetnum, Colorsets colorset, int period)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-uint8_t current_effect = 0;
+uint8_t current_effect = 3;
 uint8_t colorsetnum = 1;
 uint32_t next_TX_millis = 0;
 
