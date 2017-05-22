@@ -382,8 +382,6 @@ byte CRC8(const byte * data, byte len) {
   return crc;
 }
 
-//Check routine taken from
-//http://web.mit.edu/6.115/www/miscfiles/amulet/amulet-help/xmodem.htm
 uint16_t CRC16(uint16_t arr[], int count)
 {
 
@@ -403,6 +401,8 @@ uint16_t CRC16(uint16_t arr[], int count)
       else
         crc = (crc >> 1);
     }
+    Serial.print("running CRC16:");
+    Serial.println(crc, HEX);
   }
   return (crc);
 }
