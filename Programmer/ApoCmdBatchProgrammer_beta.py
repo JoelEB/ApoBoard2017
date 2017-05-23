@@ -17,27 +17,48 @@ eeprom_genes_start =10
 eeprom_badgeNum    =128 #try to keep badgeNum outside of gene area
 
 class BadgeCmd(cmd.Cmd):
-    prompt = 'ApoCmd: '
+    prompt = '\nApoCmd: '
     intro =  "ApoBadge2017 auto-programmer.  SPECTER v.01 build5.19.17" 
 
 
     def do_write_gene(self, line):
         lsplit = line.split("=")
-        if lsplit != 2 or line=="":
+        if len(lsplit) != 2 or line=="":
             print("syntax: Gene#=0xEffectColorset  example: 0=0D07 sets 0 to effect D(13) and colorset 7")
             return False
+        p = avd_start_interactive()
+        if p == False:
+                return False
 
         genenum = int(lsplit[0],16)
         genecode = int(lsplit[1],16)
         address = eeprom_genes_start + genenum * 2
+        avd_cmd = "write eeprom "+hex(address)+" "+hex(genecode>>8) + " "+hex(genecode &0xff)+"\n"
+        print(avd_cmd)
+        p.stdin.write(avd_cmd)        
+        avd_quit(p)
+
         return False
     
     #does not write eeprom
     def do_write_flash(self,line): #if not given a cmd then uses Apo*hex
-        invokecmd =  "avrdude avrdude -p m328 -c avrispmkii -D -V -F "
+        
+        if(check_m328_connected() == False):
+            print("No ATMEGA328 connected")
+            return False
+
+
+        #clear HFUSE bit 3 (EEPROMsave) so EEPROM doesn't get wiped by ERASE
+        p = avd_start_interactive()
+        if p == False:
+                return False
+        change_fuse_saveEEPROM(p)
+        avd_quit(p)
+    
+        invokecmd =  "avrdude avrdude -p m328 -c avrispmkii -V -F "
         invokecmd += "-Uflash:w:"
         invokecmd += hexfile
-        invokecmd += ":i -B 10" 
+        invokecmd += ":i -B 1" 
         """
         options:
         -p m328
@@ -47,7 +68,7 @@ class BadgeCmd(cmd.Cmd):
         -U    ;write memory with HARDCODED filename (will fix soon)
         -V    ;disable verify -- waste of time
         -q not used;quells progress bar
-        -B    ;bitclock speed 10 works @ 9.83s
+        -B    ;bitclock speed 10 works @ 9.83s, 1 doesn't work
         """
         print("Attempting to write flash")
         p = Popen(invokecmd,  shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -55,9 +76,11 @@ class BadgeCmd(cmd.Cmd):
         if avd_reply.find("32768 bytes of flash written")>0:
             print("Success.")
         else:
+            print("Error writing to flash")
             print(avd_reply)
             
     def do_write_batch_genes(self,line):
+        
         genedb = open("gene_db.txt","r")
         
         if line=="":
@@ -75,7 +98,8 @@ class BadgeCmd(cmd.Cmd):
             user_input = raw_input("\nFlash and write EEPROM as badge #"+str(badgeNum)+"? enter 'y' to continue")
             if user_input[0] == "Y" or user_input[0] =="y":
                 print("Writing EEPROM for badge #" + str(badgeNum) + " GENE: "+ hex(0x10000+gene)[-4:])
-                self.do_write_genes(gene_list)
+                if(self.do_write_genes(gene_list) == False):
+                    return False #False = !OK
                 badgeNum += 1
                 write_badgeNum(badgeNum)
             else:
@@ -100,7 +124,8 @@ class BadgeCmd(cmd.Cmd):
             user_input = raw_input("\nFlash and write EEPROM as badge #"+str(badgeNum)+"? enter 'y' to continue")
             if user_input[0] == "Y" or user_input[0] =="y":
                 print("Writing EEPROM for badge #" + str(badgeNum) + " GENE: "+ hex(0x10000+gene)[-4:])
-                self.do_write_genes(gene_list)
+                if(self.do_write_genes(gene_list) == False):
+                    return False #False = !OK
                 badgeNum += 1
                 self.do_write_flash("")
             else:
@@ -108,11 +133,13 @@ class BadgeCmd(cmd.Cmd):
                 break
 
     def do_write_genes(self, line):        
-              
         lsplit = line.split(",")
         if lsplit == 0 or line=="":
             print("syntax: comma seperated list of genes  example: 0d07,0a10,0b02")
             return False
+        p = avd_start_interactive()
+        if p == False:
+                return False
         NumGenes = len(lsplit)
         for gene in range(NumGenes):
             genecode = int(lsplit[gene],16)
@@ -124,14 +151,16 @@ class BadgeCmd(cmd.Cmd):
         eeprom_shadow[eeprom_CRC16 + 1] = gene_checksum & 0xff
 
         
-        p = avd_start_interactive()
         write_eeprom_shadow(eeprom_genes_start + NumGenes*2, p) #takes: total bytes to write from eeprom_shadow to eeprom, p = subprocess.popen object                      
         avd_quit(p)
         
-        return False #false = true ummm...
+        return False #False = OK
     
     def do_read_genes(self,line):
         p = avd_start_interactive()
+        if p == False:
+                return False
+    
         read_eeprom_into_shadow(p)
         avd_quit(p)
         NumGenes = eeprom_shadow[eeprom_NumGenes]
@@ -139,7 +168,7 @@ class BadgeCmd(cmd.Cmd):
             NumGenes = 58
             print("NumGenes clipped to 58")
         gene_checksum = (eeprom_shadow[eeprom_CRC16]<<8) + eeprom_shadow[eeprom_CRC16 + 1]
-        print("Numgenes = "+str(NumGenes))
+        print("\nNumgenes = "+str(NumGenes))
         for gene in range(NumGenes):
             eeprom_gene = (eeprom_shadow[gene*2 + eeprom_genes_start] << 8) + eeprom_shadow[gene*2 + eeprom_genes_start + 1]
             print(str(gene)+": "+hex(0x10000+eeprom_gene)[-4:])
@@ -148,7 +177,7 @@ class BadgeCmd(cmd.Cmd):
         else:
                   print("BAD checksum: "+hex(gene_checksum))
         return False
-            
+
     def do_exit(self, line):
         return True
     
@@ -158,7 +187,16 @@ class BadgeCmd(cmd.Cmd):
     def do_EOF(self, line):
         return True
 
+def check_m328_connected():
+    avd_cmd = "avrdude -c avrispmkii -p m328p -P usb"
+    p = Popen(avd_cmd,  shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    avd_reply = str(p.communicate())
+    if (avd_reply.find("failed") >= 0):
+        return False
+    return True
+    
 def read_eeprom_into_shadow(p):
+    print("reading EEPROM")
     avd_cmd = "read eeprom 0x00 0x80\n"
     p.stdin.write(avd_cmd)
     avd_reply = p.stdout.readline().split(" ")
@@ -187,16 +225,44 @@ def read_eeprom_into_shadow(p):
             eeprom_shadow[addr] = avd_reply[avd_byte].decode("hex")
             addr += 1
     return True
-
-def write_badgeNum(badgeNum):
-    avd_cmd = "write eeprom " + hex(eeprom_badgeNum) + " " + badgeNum
-    p = avd_start_interactive()
+    
+def change_fuse_saveEEPROM(p): #assumes terminal mode
+    avd_cmd = "read hfuse\n"
     p.stdin.write(avd_cmd)
-    avd_quit(p)
+    p.stdout.readline()
+    p.stdout.readline()
+    p.stdout.readline()
+    avr_reply  = p.stdout.readline().split(' ')
+    if len(avr_reply) < 2:
+        print("read hfuse bad avd response")
+        return False
+    hfuse = int(avr_reply[2],16)
+    print("hfuse = " + hex(hfuse))
+    if hfuse & 0x08:
+        print ("clearing hfuse EEPROMsave bit")
+        hfuse &= 0xF7
+        print ("changing to "+hex(hfuse))
+        avd_cmd = "write hfuse 0x00 "+hex(hfuse)+"\n"
+        p.stdin.write(avd_cmd)
+        p.stdout.readline()
+        p.stdout.readline()
+        if p.stdout.readline().find("write hfuse 0x00") >0:
+            return True
+        else:
+            print ("unexpected response from avd write hfuse")
+            return False
+        
+    else:
+        print ("hfuse EEPROMsave already cleared")
+
+    
+def write_badgeNum(badgeNum, p): #assumes terminal mode
+    avd_cmd = "write eeprom " + hex(eeprom_badgeNum) + " " + badgeNum
+    p.stdin.write(avd_cmd)
     
 def write_eeprom_shadow(numbytes, p):
     adr = 0
-
+    print("Writing " + str(numbytes) + " bytes to EEPROM")
     while (adr < numbytes):
         avd_cmd = "write eeprom "
         avd_bytecount = 0
@@ -213,9 +279,9 @@ def write_eeprom_shadow(numbytes, p):
         p.stdout.readline()
         p.stdout.readline()
         if(p.stdout.readline().find("write eeprom")>0):
-            print("eeprom write OK! :"+hex(adr - avd_bytecount))
+            print("EEPROM write OK")
         else:
-            print("eeprom write failed :"+hex(adr - avd_bytecount))
+            print("EEPROM write failed @"+hex(adr - avd_bytecount))
     return False # False = OK!
 
 def geneCRC16(count): #count in _words_
@@ -240,6 +306,14 @@ def avd_quit(p):
 
 def avd_start_interactive():
     p = Popen("avrdude -c avrispmkii -p m328p -P usb -F -t", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    p.stderr.readline()
+    avd_reply = p.stderr.readline() 
+    if( avd_reply.find("failed") > 0 ):
+        print("No ATMEGA328 found")
+        return False
+    if ( avd_reply.find("done") > 0):
+        print("No AVRispMKII found")
+        return False
     #setNonBlocking(p.stdout)
     #setNonBlocking(p.stderr)
 
