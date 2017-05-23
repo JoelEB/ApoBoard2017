@@ -99,9 +99,12 @@ class BadgeCmd(cmd.Cmd):
             if user_input[0] == "Y" or user_input[0] =="y":
                 print("Writing EEPROM for badge #" + str(badgeNum) + " GENE: "+ hex(0x10000+gene)[-4:])
                 if(self.do_write_genes(gene_list) == False):
-                    return False #False = !OK
-                badgeNum += 1
-                write_badgeNum(badgeNum)
+                    p = avd_start_interactive()
+                    if p == False:
+                        return False
+                    write_badgeNum(badgeNum)
+                    avd_quit(p)
+                    badgeNum += 1
             else:
                 print("Exiting batch gene programmer")
                 break
@@ -125,9 +128,13 @@ class BadgeCmd(cmd.Cmd):
             if user_input[0] == "Y" or user_input[0] =="y":
                 print("Writing EEPROM for badge #" + str(badgeNum) + " GENE: "+ hex(0x10000+gene)[-4:])
                 if(self.do_write_genes(gene_list) == False):
-                    return False #False = !OK
-                badgeNum += 1
-                self.do_write_flash("")
+                    p = avd_start_interactive()
+                    if p == False:
+                        return False
+                    write_badgeNum(badgeNum, p)
+                    avd_quit(p)
+                    badgeNum += 1
+                    self.do_write_flash("")
             else:
                 print("Exiting batch flash+gene programmer")
                 break
@@ -257,9 +264,9 @@ def change_fuse_saveEEPROM(p): #assumes terminal mode
 
     
 def write_badgeNum(badgeNum, p): #assumes terminal mode
-    avd_cmd = "write eeprom " + hex(eeprom_badgeNum) + " " + badgeNum
+    avd_cmd = "write eeprom " + hex(eeprom_badgeNum) + " " + str(badgeNum) +"\n"
     p.stdin.write(avd_cmd)
-    
+    print("setting badgeNum to " + str(badgeNum))    
 def write_eeprom_shadow(numbytes, p):
     adr = 0
     print("Writing " + str(numbytes) + " bytes to EEPROM")
