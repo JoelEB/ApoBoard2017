@@ -110,3 +110,37 @@ setNonBlocking(p.stderr)
 #errthread.start()
 
 
+
+
+
+
+*********************** NOTES ABOUT ATMEGA328 FUSES
+from the datasheet:
+Extended Fuse Byte for ATmega328/328P
+Extended Fuse Byte	Bit No	Description				Default Value
+BODLEVEL2(1)		2	Brown-out Detector trigger level	1 (unprogrammed)
+BODLEVEL1(1)		1	Brown-out Detector trigger level	1 (unprogrammed)
+BODLEVEL0(1)		0	Brown-out Detector trigger level	1 (unprogrammed)
+
+High Fuse Byte for ATmega328/328P
+High Fuse Byte		Bit No	Description				Default Value
+RSTDISBL		7	External Reset Disable			1 (unprogrammed)
+DWEN			6	debugWIRE Enable			1 (unprogrammed)
+SPIEN			5	Enable Serial Program and Data Download	0 (programmed, SPI programming enabled)
+WDTON			4	Watchdog Timer Always On		1 (unprogrammed)
+EESAVE			3	EEPROM memory is preserved on erase	1 (unprogrammed), EEPROM not reserved
+BOOTSZ1			2	Select Boot Size 			0 (programmed)
+BOOTSZ0			1	Select Boot Size			0 (programmed)
+BOOTRST			0	Select Reset Vector			1 (unprogrammed)
+
+Low Fuse Byte for ATmega328/328P
+Low Fuse Byte		Bit No	Description				Default Value
+CKDIV8			7	Divide clock by 8			0 (programmed)
+CKOUT			6	Clock output				1 (unprogrammed)
+SUT1			5	Select start-up time			1 (unprogrammed)
+SUT0			4	Select start-up time			0 (programmed)
+CKSEL3			3	Select Clock source			0 (programmed)
+CKSEL2			2	Select Clock source			0 (programmed)
+CKSEL1			1	Select Clock source			1 (unprogrammed)
+CKSEL0			0	Select Clock source			0 (programmed)
+
