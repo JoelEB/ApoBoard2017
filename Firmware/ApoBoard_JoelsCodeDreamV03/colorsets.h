@@ -1,3 +1,28 @@
+#define BRIGHT_WHITE      0xFFFFFF
+#define DIM_WHITE         0x555555
+#define BLACK             0x000000
+
+/*
+   G..R...B
+*/
+#define GREEN             0xFF0000
+#define RED               0x00FF00
+#define BLUE              0x0000FF
+#define L_GREEN             0x770000
+#define L_RED               0x007700
+#define L_BLUE              0x000077
+#define YELLOW            0xFFFF00
+#define ORANGE            0x77FF00
+#define TEST              0xFF7700
+#define CYAN              0xFF00FF
+#define DARK_CYAN         0x8B008B
+#define PURPLE            0x0099FF
+#define MAGENTA       0x00FFFF
+#define AQUA              0xFF7FD4
+#define AERO_BLUE         0xFFC9E5
+#define BLUE_GREEN        0x980DBA
+#define CARIBBEAN_CURRENT 0x6D006F
+#define CERULAN           0x7B00A7
 
 #define MaxColorsets 8
 PROGMEM const uint32_t colorarray [MaxColorsets] [8] = { //memopt
@@ -65,37 +90,4 @@ int greenblue[3] = { 0, 100, 100};
 
 */
 
-#define BRIGHT_WHITE      0xFFFFFF
-#define DIM_WHITE         0x555555
-#define BLACK             0x000000
-
-/*
-   G..R...B
-*/
-#define GREEN             0xFF0000
-#define RED               0x00FF00
-#define BLUE              0x0000FF
-
-#define L_GREEN             0x770000
-#define L_RED               0x007700
-#define L_BLUE              0x000077
-
-#define YELLOW            0xFFFF00
-#define ORANGE            0x77FF00
-
-#define TEST              0xFF7700
-
-#define CYAN              0xFF00FF
-#define DARK_CYAN         0x8B008B
-
-
-
-#define PURPLE            0x0099FF
-#define MAGENTA       0x00FFFF
-
-#define AQUA              0xFF7FD4
-#define AERO_BLUE         0xFFC9E5
-#define BLUE_GREEN        0x980DBA
-#define CARIBBEAN_CURRENT 0x6D006F
-#define CERULAN           0x7B00A7
 
