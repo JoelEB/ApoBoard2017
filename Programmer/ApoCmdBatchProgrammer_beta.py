@@ -39,9 +39,12 @@ class BadgeCmd(cmd.Cmd):
         avd_quit(p)
 
         return False
-    
+    def help_write_gene(self):
+        print '\n'.join([ 'write_gene [gene#]=[gene as 4 HEX digits]',
+                           '\texample: 0=0D07 sets 0 to effect D(13) and colorset 7',
+                           ])
     #does not write eeprom
-    def do_write_flash(self,line): #if not given a cmd then uses Apo*hex
+    def do_write_flash(self,line): #uses ApoBoard*.hex, also known as hexfile
         
         if(check_m328_connected() == False):
             print("No ATMEGA328 connected")
@@ -78,67 +81,69 @@ class BadgeCmd(cmd.Cmd):
         else:
             print("Error writing to flash")
             print(avd_reply)
+    def help_write_flash(self):
+        print '\n'.join([ 'write_flash',
+                           '\twill immediately write the ApoBoard*.hex (automatically found) to ApoBadge FLASH',
+                           ])
             
     def do_write_batch_genes(self,line):
+        self.batch_writer(line,"genes")
+
+    def help_write_batch_genes(self):
+        print '\n'.join([ 'write_batch_genes [start point in list]',
+                           '\tWrite a series of genes to a series of devices',
+                           '\tUses the file gene_db.txt as a master gene list',
+                           '\tWrites badgeNum (from list) to EEPROM'
+                           ])
         
+    def batch_writer(self,line,mode):
         genedb = open("gene_db.txt","r")
         
         if line=="":
             badgeNum=1
         else:
             badgeNum = int(line)
+            
         while True:
             geneln = genedb.readline().split(":")
             gene_list = geneln[1]
             gene_list = gene_list.strip()
             if gene_list[-1:] == "\n":
-                gene_list = gene_list[:-1] #trim newline of end
-            geneNumDb = str(geneln[0])
-            gene = int(gene_list,16)
-            user_input = raw_input("\nFlash and write EEPROM as badge #"+str(badgeNum)+"? enter 'y' to continue")
-            if user_input[0] == "Y" or user_input[0] =="y":
-                print("Writing EEPROM for badge #" + str(badgeNum) + " GENE: "+ hex(0x10000+gene)[-4:])
-                if(self.do_write_genes(gene_list) == False):
-                    p = avd_start_interactive()
-                    if p == False:
-                        return False
-                    write_badgeNum(badgeNum)
-                    avd_quit(p)
-                    badgeNum += 1
-            else:
-                print("Exiting batch gene programmer")
-                break
-
+                gene_list = gene_list[:-1] #trim newline off end
+            geneNumDb = int(geneln[0])
+            if geneNumDb == badgeNum:
+                gene = int(gene_list,16)
+                user_input = raw_input("\nFlash and write EEPROM as badge #"+str(badgeNum)+"? enter 'y' to continue:")
+                if user_input[0] == "Y" or user_input[0] =="y":
+                    print("Writing EEPROM for badge #" + str(badgeNum) + " GENE: "+ hex(0x10000+gene)[-4:])
+                    if "genes" in mode:
+                        if(self.do_write_genes(gene_list) == False):
+                            p = avd_start_interactive()
+                            if p == False:
+                                return False
+                            write_badgeNum(badgeNum, p)
+                            avd_quit(p)
+                            badgeNum += 1
+                    if "flash" in mode:
+                        self.do_write_flash("")
+                else:
+                    print("Exiting batch gene programmer")
+                    break
+            
+                
+    
     def do_write_batch_flash(self,line):
-        genedb = open("gene_db.txt","r")
-        
-        if line=="":
-            badgeNum=1
-        else:
-            badgeNum = int(line)
-        while True:
-            geneln = genedb.readline().split(":")
-            gene_list = geneln[1]
-            gene_list = gene_list.strip()
-            if gene_list[-1:] == "\n":
-                gene_list = gene_list[:-1] #trim newline of end
-            geneNumDb = str(geneln[0])
-            gene = int(gene_list,16)
-            user_input = raw_input("\nFlash and write EEPROM as badge #"+str(badgeNum)+"? enter 'y' to continue")
-            if user_input[0] == "Y" or user_input[0] =="y":
-                print("Writing EEPROM for badge #" + str(badgeNum) + " GENE: "+ hex(0x10000+gene)[-4:])
-                if(self.do_write_genes(gene_list) == False):
-                    p = avd_start_interactive()
-                    if p == False:
-                        return False
-                    write_badgeNum(badgeNum, p)
-                    avd_quit(p)
-                    badgeNum += 1
-                    self.do_write_flash("")
-            else:
-                print("Exiting batch flash+gene programmer")
-                break
+        self.batch_writer(line,"genes+flash")
 
+    def help_write_batch_flash(self):
+        print '\n'.join([ 'write_batch_flash [start point in list]',
+                           '\tWrites genes to EEPROM',
+                           '\tWrites ApoBadge*.hex to FLASH',
+                           '\tUses the file gene_db.txt as a master gene list',
+                           '\tWrites badgeNum (from list) to EEPROM',
+                           '\tClears hfuse bit 3 so EEPROM does is not erased during FLASH erase',
+                           ])
+    
     def do_write_genes(self, line):        
         lsplit = line.split(",")
         if lsplit == 0 or line=="":
@@ -162,6 +167,13 @@ class BadgeCmd(cmd.Cmd):
         avd_quit(p)
         
         return False #False = OK
+
+    def help_write_genes(self):
+        print '\n'.join([ 'write_genes [gene],[gene],[gene]...',
+                           '\tWrites genes to EEPROM starting at gene0',
+                           '\tWrites CRC to EEPROM',
+                           '\tUpdates NumGenes in EEPROM'
+                           ])
     
     def do_read_genes(self,line):
         p = avd_start_interactive()
@@ -184,7 +196,12 @@ class BadgeCmd(cmd.Cmd):
         else:
                   print("BAD checksum: "+hex(gene_checksum))
         return False
-
+    def help_read_genes(self):
+        print '\n'.join([ 'read_genes',
+                           '\tDump gene table from EEPROM',
+                           '\tChecks for proper CRC in EEPROM'
+                           ])
+    
     def do_exit(self, line):
         return True
     
