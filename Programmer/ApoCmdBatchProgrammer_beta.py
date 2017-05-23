@@ -181,13 +181,16 @@ class BadgeCmd(cmd.Cmd):
                 return False
     
         read_eeprom_into_shadow(p)
+        eeprom_badgenum = read_badgeNum(p)
         avd_quit(p)
+
         NumGenes = eeprom_shadow[eeprom_NumGenes]
         if NumGenes > 58:
             NumGenes = 58
             print("NumGenes clipped to 58")
         gene_checksum = (eeprom_shadow[eeprom_CRC16]<<8) + eeprom_shadow[eeprom_CRC16 + 1]
-        print("\nNumgenes = "+str(NumGenes))
+        print("\nEEPROM badgeNum = "+str(eeprom_badgenum))
+        print("Numgenes = "+str(NumGenes))
         for gene in range(NumGenes):
             eeprom_gene = (eeprom_shadow[gene*2 + eeprom_genes_start] << 8) + eeprom_shadow[gene*2 + eeprom_genes_start + 1]
             print(str(gene)+": "+hex(0x10000+eeprom_gene)[-4:])
@@ -279,7 +282,19 @@ def change_fuse_saveEEPROM(p): #assumes terminal mode
     else:
         print ("hfuse EEPROMsave already cleared")
 
-    
+
+def read_badgeNum( p): #assumes terminal mode
+    avd_cmd = "read eeprom " + hex(eeprom_badgeNum) + " 1\n" #read badgeNum byte
+    p.stdin.write(avd_cmd)
+    p.stdout.readline()
+    p.stdout.readline()
+    p.stdout.readline()
+    avr_reply  = p.stdout.readline().split(' ')
+    if len(avr_reply) < 2:
+        print("read hfuse bad avd response")
+        return False
+    badgeNum = int(avr_reply[2],16)
+    return badgeNum
 def write_badgeNum(badgeNum, p): #assumes terminal mode
     avd_cmd = "write eeprom " + hex(eeprom_badgeNum) + " " + str(badgeNum) +"\n"
     p.stdin.write(avd_cmd)
@@ -324,7 +339,7 @@ def geneCRC16(count): #count in _words_
 
 def avd_quit(p):
     avd_cmd = "quit\n"
-    print("Exiting Avrdude")
+    #print("Exiting Avrdude")
     p.stdin.write(avd_cmd)
     p.communicate()
 
@@ -338,9 +353,6 @@ def avd_start_interactive():
     if ( avd_reply.find("done") > 0):
         print("No AVRispMKII found")
         return False
-    #setNonBlocking(p.stdout)
-    #setNonBlocking(p.stderr)
-
     p.stdin.write("sig\n") #get device signature
     p.stdout.readline()
     p.stdout.readline()
@@ -351,7 +363,7 @@ def avd_start_interactive():
         print("Failed to connect to badge")
         return False
     else:
-        print("Avrdude connection opened to badge " + avd_sig_reply)
+        #print("Avrdude connection opened to badge " + avd_sig_reply)
         return p
     
 """
