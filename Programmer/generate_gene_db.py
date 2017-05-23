@@ -4,17 +4,17 @@
 
 MaxEffects = 14
 MaxColorsets = 8
-GeneNum = 0
+GeneNum = 1 #start with Gene1
 
 outfile = open("gene_db.txt","w")
 
-for colorset in range(MaxColorsets):
+for colorset in range(1,MaxColorsets): #skip colorset 0
     for effect in range(MaxEffects):
         gene = (effect << 8) + colorset
         outfile.write(str(GeneNum) + ": " + hex(0x10000 + gene)[-4:]+"\n")
         GeneNum += 1
 outfile.close()
-print("Wrote db of " + str(GeneNum-1)+" genes.")
+print("Wrote gene_db.txt of " + str(GeneNum-1)+" genes.")
 
         
     
