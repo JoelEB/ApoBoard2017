@@ -11,6 +11,7 @@ from random import *
 #define eeprom_CRC16    1 //16-bit checksum of genes
 #define eeprom_genes_start 10
 """
+AVRDUDELOC = "avr/bin/avrdude -C avr/etc/avrdude.conf"
 eeprom_NumGenes    =0
 eeprom_CRC16       =1 #16-bit checksum of genes
 eeprom_genes_start =10
@@ -58,7 +59,7 @@ class BadgeCmd(cmd.Cmd):
         change_fuse_saveEEPROM(p)
         avd_quit(p)
     
-        invokecmd =  "avrdude avrdude -p m328 -c avrispmkii -V -F "
+        invokecmd =  AVRDUDELOC + " -p m328 -c avrispmkii -V -F "
         invokecmd += "-Uflash:w:"
         invokecmd += hexfile
         invokecmd += ":i -B 1" 
@@ -215,7 +216,7 @@ class BadgeCmd(cmd.Cmd):
         return True
 
 def check_m328_connected():
-    avd_cmd = "avrdude -c avrispmkii -p m328p -P usb"
+    avd_cmd = AVRDUDELOC + " -c avrispmkii -p m328p -P usb"
     p = Popen(avd_cmd,  shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     avd_reply = str(p.communicate())
     if (avd_reply.find("failed") >= 0):
@@ -344,7 +345,7 @@ def avd_quit(p):
     p.communicate()
 
 def avd_start_interactive():
-    p = Popen("avrdude -c avrispmkii -p m328p -P usb -F -t", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    p = Popen(AVRDUDELOC + " -c avrispmkii -p m328p -P usb -F -t", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     p.stderr.readline()
     avd_reply = p.stderr.readline() 
     if( avd_reply.find("failed") > 0 ):
