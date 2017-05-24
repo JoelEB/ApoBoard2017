@@ -346,6 +346,7 @@ def avd_quit(p):
 
 def avd_start_interactive():
     p = Popen(AVRDUDELOC + " -c avrispmkii -p m328p -P usb -F -t", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    #print(p.communicate())
     p.stderr.readline()
     avd_reply = p.stderr.readline() 
     if( avd_reply.find("failed") > 0 ):
