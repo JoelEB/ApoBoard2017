@@ -2,8 +2,8 @@
 #gene database generator
 #makes file: gene_db.txt
 
-MaxEffects = 14
-MaxColorsets = 8
+MaxEffects = 16
+MaxColorsets = 14
 GeneNum = 1 #start with Gene1
 
 outfile = open("gene_db.txt","w")
