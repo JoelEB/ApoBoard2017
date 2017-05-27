@@ -546,11 +546,8 @@ void NeoEffect_portal2(uint8_t colorsetnum, Colorsets & colorset, int period,  u
   effect_counterA ++;
 }
 ////////////////////////////////////////////////////////////////////////////////
-PROGMEM const uint8_t spider_effect_anim[] =
-{5, 2, 7, 4, 9, 6, 1, 8, 3, 0};
-
-
-#define spider_effect_anim_length 11
+PROGMEM const uint8_t spider_effect_anim[] = {5, 2, 7, 4, 9, 6, 1, 8, 3, 0};
+#define spider_effect_anim_length 10
 
 void NeoEffect_spider(uint8_t colorsetnum, Colorsets & colorset, int period,  uint8_t brightness)
 {
@@ -567,23 +564,27 @@ void NeoEffect_spider(uint8_t colorsetnum, Colorsets & colorset, int period,  ui
   effect_counterA ++;
 }
 ////////////////////////////////////////////////////////////////////////////////
+//effect #2 - spider2
+//SPECTER added random fadeperiod increase
 void NeoEffect_spider2(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
 
   uint8_t ON = effect_counterA % spider_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % spider_effect_anim_length;
 
-  neo.fadeto( pgm_read_byte(&(spider_effect_anim[ON])), colorset.getFG(colorsetnum) , period << 1);
-  neo.fadeto( pgm_read_byte(&(spider_effect_anim[OFF])), colorset.getBG(0) , period);
-  neo.wait(period << 1, strip);
-  neo.fadeto( pgm_read_byte(&(spider_effect_anim[ON])), colorset.getBG(colorsetnum) , period << 1);
-  neo.fadeto( pgm_read_byte(&(spider_effect_anim[OFF])), colorset.getFG(0) , period);
-  neo.wait(period << 1, strip);
+  neo.fadeto( pgm_read_byte(&(spider_effect_anim[ON])), colorset.getFG(colorsetnum) , period );
+  neo.fadeto( pgm_read_byte(&(spider_effect_anim[OFF])), colorset.getBG(0) , period << 4);
+  neo.wait(period, strip);
+  if (random(10) > 0) {
+    neo.fadeto( pgm_read_byte(&(spider_effect_anim[ON])), colorset.getBG(colorsetnum) , period);
+    neo.fadeto( pgm_read_byte(&(spider_effect_anim[OFF])), colorset.getFG(0) , period >> 1);
+    neo.wait(period, strip);
+  }
   effect_counterA ++;
   FGcounter ++;
   BGcounter ++;
 }
 ////////////////////////////////////////////////////////////////////////////////
-const uint8_t cylon_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
+PROGMEM const uint8_t cylon_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {2, 3},
   {1, 4},
   {0, 5},
@@ -607,11 +608,11 @@ void NeoEffect_cylon(uint8_t colorsetnum, Colorsets & colorset, int period,  uin
   uint8_t OFF = (effect_counterA - 1) % cylon_effect_anim_length;
 
   if (cylon_effect_anim[ON][0] != 0xFF) {
-    neo.fadeto( cylon_effect_anim[ON][0], colorset.getFG(colorsetnum) , period);
-    neo.fadeto( cylon_effect_anim[ON][1], colorset.getFG(colorsetnum) , period);
+    neo.fadeto( pgm_read_byte(&( cylon_effect_anim[ON][0])), colorset.getFG(colorsetnum) , period);
+    neo.fadeto( pgm_read_byte(&( cylon_effect_anim[ON][1])), colorset.getFG(colorsetnum) , period);
     if (cylon_effect_anim[OFF][0] != 0xFF) {
-      neo.fadeto( cylon_effect_anim[OFF][0], colorset.getBG(colorsetnum) , period);
-      neo.fadeto( cylon_effect_anim[OFF][1], colorset.getBG(colorsetnum) , period);
+      neo.fadeto( pgm_read_byte(&( cylon_effect_anim[OFF][0])), colorset.getBG(colorsetnum) , period);
+      neo.fadeto( pgm_read_byte(&( cylon_effect_anim[OFF][1])), colorset.getBG(colorsetnum) , period);
     }
     neo.wait(period, strip);
   }
@@ -634,7 +635,7 @@ void NeoEffect_cylon(uint8_t colorsetnum, Colorsets & colorset, int period,  uin
          0
 
 */
-const uint8_t cylon2_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
+PROGMEM const uint8_t cylon2_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {2, 3},
   {1, 4},
   {0, 5},
@@ -652,10 +653,10 @@ void NeoEffect_cylon2(uint8_t colorsetnum, Colorsets & colorset, int period,  ui
   uint8_t ON = effect_counterA % cylon2_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % cylon2_effect_anim_length;
 
-  neo.fadeto( cylon2_effect_anim[ON][0], colorset.getFG(colorsetnum) , period);
-  neo.fadeto( cylon2_effect_anim[ON][1], colorset.getFG(colorsetnum) , period);
-  neo.fadeto( cylon2_effect_anim[OFF][0], colorset.getBG(colorsetnum) , period);
-  neo.fadeto( cylon2_effect_anim[OFF][1], colorset.getBG(colorsetnum) , period);
+  neo.fadeto( pgm_read_byte(&(cylon2_effect_anim[ON][0])), colorset.getFG(colorsetnum) , period);
+  neo.fadeto( pgm_read_byte(&(cylon2_effect_anim[ON][1])), colorset.getFG(colorsetnum) , period);
+  neo.fadeto( pgm_read_byte(&(cylon2_effect_anim[OFF][0])), colorset.getBG(colorsetnum) , period);
+  neo.fadeto( pgm_read_byte(&(cylon2_effect_anim[OFF][1])), colorset.getBG(colorsetnum) , period);
   neo.wait(period, strip);
   if (ON == 0 || ON == 5)
     FGcounter ++;
@@ -684,7 +685,7 @@ void NeoEffect_waterfall(uint8_t colorsetnum, Colorsets & colorset, int period, 
       1     9
          0
 */
-const uint8_t zigzag_effect_anim[] = {2, 4, 0, 6, 8, 7, 9, 5, 1, 3};
+PROGMEM const uint8_t zigzag_effect_anim[] = {2, 4, 0, 6, 8, 7, 9, 5, 1, 3};
 
 #define zigzag_effect_anim_length 10
 
@@ -696,8 +697,8 @@ void NeoEffect_zigzag(uint8_t colorsetnum, Colorsets & colorset, int period, uin
   uint8_t OFF = (effect_counterA - 1) % zigzag_effect_anim_length;
 
 
-  neo.fadeto( zigzag_effect_anim[ON], colorset.getFG(colorsetnum) , period);
-  neo.fadeto( zigzag_effect_anim[OFF], colorset.getBG(colorsetnum) , period << 1);
+  neo.fadeto( pgm_read_byte(&(zigzag_effect_anim[ON])), colorset.getFG(colorsetnum) , period);
+  neo.fadeto( pgm_read_byte(&(zigzag_effect_anim[OFF])), colorset.getBG(colorsetnum) , period << 1);
   neo.wait(period, strip);
 
   if (ON == 0)
@@ -717,7 +718,7 @@ void NeoEffect_zigzag(uint8_t colorsetnum, Colorsets & colorset, int period, uin
      1     9
         0
 */
-const uint8_t infinity_effect_anim[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 5, 4, 3, 2, 1, 0, 9, 8, 7, 6, 5};
+PROGMEM const uint8_t infinity_effect_anim[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 5, 4, 3, 2, 1, 0, 9, 8, 7, 6, 5};
 
 #define infinity_effect_anim_length 22
 
@@ -729,8 +730,8 @@ void NeoEffect_infinity(uint8_t colorsetnum, Colorsets & colorset, int period,  
   uint8_t OFF = (effect_counterA - 1) % infinity_effect_anim_length;
 
 
-  neo.fadeto( infinity_effect_anim[ON], colorset.getFG(colorsetnum) , period);
-  neo.fadeto( infinity_effect_anim[OFF], colorset.getBG(colorsetnum) , period << 1);
+  neo.fadeto( pgm_read_byte(&(infinity_effect_anim[ON])), colorset.getFG(colorsetnum) , period);
+  neo.fadeto( pgm_read_byte(&(infinity_effect_anim[OFF])), colorset.getBG(colorsetnum) , period << 1);
   neo.wait(period, strip);
 
   if (ON == 0)
@@ -864,12 +865,12 @@ uint8_t eyeblink_frames [3] = {1, 0, 1};
 void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
   strip.setBrightness(brightness);
 
-  uint8_t r = random(25);
-  if ( r % 5 ) {
+  uint8_t r = random(10);
+  if ( r == 0) {
     current_frame = 1;
     eyeframe_counter = 3;
   }
-  else if (!eyeframe_counter)
+  else if (eyeframe_counter == 0)
     current_frame = 0;
   if (eyeframe_counter) {
     current_frame = eyeblink_frames[eyeframe_counter - 1 ];
@@ -897,23 +898,16 @@ void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, u
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/*       5
-     4     6
-  3           7
-  2           8
-     1     9
-        0
-*/
-// optimized away by SPECTER   const uint8_t loading_effect_anim[] PROGMEM = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}; //memopt
 
+//Now randomly will change directions 1/0x100 times
 #define loading_effect_anim_length 10
+int8_t NeoEffect_loading_dir = -1;
 
 void NeoEffect_loading (uint8_t colorsetnum, Colorsets & colorset, int period)//, uint8_t brightness)
 {
-  strip.setBrightness(brightness);
-
+  strip.setBrightness( brightness );
   uint8_t ON = effect_counterA % loading_effect_anim_length;
-  uint8_t OFF = (effect_counterA - 1) % loading_effect_anim_length;
+  uint8_t OFF = (effect_counterA - NeoEffect_loading_dir) % loading_effect_anim_length;
 
 
   neo.fadeto( ON, colorset.getFG(colorsetnum) , period);
@@ -925,21 +919,15 @@ void NeoEffect_loading (uint8_t colorsetnum, Colorsets & colorset, int period)//
     FGcounter ++;
     BGcounter ++;
   }
+  if (random(0x100) == 0) {
+    NeoEffect_loading_dir = - NeoEffect_loading_dir;
+  }
 
-  strip.setBrightness( brightness );
-
-  effect_counterA ++;
+  effect_counterA += NeoEffect_loading_dir;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/*       5
-     4     6
-  3           7
-  2           8
-     1     9
-        0
-*/
 void NeoEffect_stephen (uint8_t colorsetnum, Colorsets & colorset, int period)//, uint8_t brightness)
 {
   strip.setBrightness(brightness);
@@ -972,8 +960,6 @@ void NeoEffect_stephen (uint8_t colorsetnum, Colorsets & colorset, int period)//
       NeoEffect_BufferedFlash(colorset.getFG(colorsetnum), 1500);
     }
   }
-
-  strip.setBrightness( brightness );
 
   effect_counterA ++;
 }
@@ -1021,7 +1007,7 @@ void NeoEffect_poolofradiance (uint8_t colorsetnum, Colorsets & colorset, int pe
   poolofradiance_current_buffer ^= 1;
 }
 
-//flash white
+//flash a color. Fades back to whatever was there before.
 uint32_t NeoEffect_BufferedFlash_buffer [NeoLEDs]; //saves what was there before to fade back to it.
 void NeoEffect_BufferedFlash (uint32_t flashcolor, int period) {
   strip.setBrightness(brightness);
@@ -1108,6 +1094,12 @@ void pacgame_blinkpp(int period) {
     else
       neo.fadeto(4, BLACK, period);
   }
+  else if (pacgame_state == 3) {
+    if (pacgame_ppstate)
+      neo.fadeto(pacgame_ghostpos, 0x8080ff, period);
+    else
+      neo.fadeto(pacgame_ghostpos, BLUE, period);
+  }
 }
 
 void pacgame_movepac(int8_t dir, int period) {
@@ -1130,7 +1122,7 @@ void pacgame_moveghost(int8_t dir, uint32_t color, int period) {
 #define hypnotoad_effect_anim_length 2
 
 //written by Joel. Optimized by SPECTER.
-void NeoEffect_hypnotoad(uint8_t colorsetnum, Colorsets colorset, int period) 
+void NeoEffect_hypnotoad(uint8_t colorsetnum, Colorsets colorset, int period)
 {
   if (effect_counterA % hypnotoad_effect_anim_length) {
     for (uint8_t ON = 0; ON < NeoLEDs; ON++)
@@ -1359,7 +1351,7 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
   switch (current_effect) {
     case 0: NeoEffect_loading (colorsetnum, colorset, 200 ); break;
     case 1: NeoEffect_spider (colorsetnum, colorset, 100, 30 ); break;
-    case 2: NeoEffect_spider2(colorsetnum, colorset, 25, 30 );  break;
+    case 2: NeoEffect_spider2(colorsetnum, colorset, 50, 30 );  break;
     case 3: NeoEffect_cylon  (colorsetnum, colorset, 200, 30 );  break;
     case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200, 30 );  break;
     case 5: NeoEffect_zigzag (colorsetnum, colorset, 350, 30 );  break;
