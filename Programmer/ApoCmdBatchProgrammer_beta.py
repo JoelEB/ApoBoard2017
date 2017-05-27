@@ -11,7 +11,8 @@ from random import *
 #define eeprom_CRC16    1 //16-bit checksum of genes
 #define eeprom_genes_start 10
 """
-AVRDUDELOC = "avr/bin/avrdude -C avr/etc/avrdude.conf"
+#AVRDUDELOC = "avr/bin/avrdude -C avr/etc/avrdude.conf"
+AVRDUDELOC = "avrdude"
 eeprom_NumGenes    =0
 eeprom_CRC16       =1 #16-bit checksum of genes
 eeprom_genes_start =10
