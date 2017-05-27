@@ -770,6 +770,9 @@ void NeoEffect_spider2(uint8_t colorsetnum, Colorsets & colorset, int period, ui
   neo.fadeto( pgm_read_byte(&(spider_effect_anim[ON])), colorset.getFG(colorsetnum) , period << 1);
   neo.fadeto( pgm_read_byte(&(spider_effect_anim[OFF])), colorset.getBG(0) , period);
   neo.wait(period << 1, strip);
+  neo.fadeto( pgm_read_byte(&(spider_effect_anim[ON])), colorset.getBG(colorsetnum) , period << 1);
+  neo.fadeto( pgm_read_byte(&(spider_effect_anim[OFF])), colorset.getFG(0) , period);
+  neo.wait(period << 1, strip);
   effect_counterA ++;
   FGcounter ++;
   BGcounter ++;
@@ -794,7 +797,7 @@ const uint8_t cylon_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), i
 #define cylon_effect_anim_length 12
 
 void NeoEffect_cylon(uint8_t colorsetnum, Colorsets & colorset, int period,  uint8_t brightness) {
-
+  strip.setBrightness(brightness);
   uint8_t ON = effect_counterA % cylon_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % cylon_effect_anim_length;
 
@@ -840,7 +843,7 @@ const uint8_t cylon2_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), 
 
 #define cylon2_effect_anim_length 8
 void NeoEffect_cylon2(uint8_t colorsetnum, Colorsets & colorset, int period,  uint8_t brightness) {
-
+  strip.setBrightness(brightness);
   uint8_t ON = effect_counterA % cylon2_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % cylon2_effect_anim_length;
 
@@ -863,6 +866,8 @@ const uint8_t waterfall_effect_anim[][2] = {};
 
 void NeoEffect_waterfall(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness)
 {
+  strip.setBrightness(brightness);
+  
   uint8_t ON = effect_counterA % waterfall_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % waterfall_effect_anim_length;
 }
@@ -880,6 +885,8 @@ const uint8_t zigzag_effect_anim[] = {2, 4, 0, 6, 8, 7, 9, 5, 1, 3};
 
 void NeoEffect_zigzag(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness)
 {
+  strip.setBrightness(brightness);
+  
   uint8_t ON = effect_counterA % zigzag_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % zigzag_effect_anim_length;
 
@@ -911,6 +918,8 @@ const uint8_t infinity_effect_anim[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 5, 4, 3
 
 void NeoEffect_infinity(uint8_t colorsetnum, Colorsets & colorset, int period,  uint8_t brightness)
 {
+  strip.setBrightness(brightness);
+  
   uint8_t ON = effect_counterA % infinity_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % infinity_effect_anim_length;
 
@@ -951,6 +960,8 @@ bool update_smiley = true;
 uint8_t smiley_face = 0;
 
 void NeoEffect_smiley(uint8_t colorsetnum, Colorsets & colorset, int period,  uint8_t brightness) {
+  strip.setBrightness(brightness);
+  
   uint8_t r = random(0x100);
   if ( r > 0xF0 ) {
     if (r < 0xF3) {
@@ -1016,6 +1027,8 @@ PROGMEM const uint8_t pacmanFaces[pacmanNumFrames][10]  = {  //memopt
 uint8_t pacman_rotation = 0;
 
 void NeoEffect_pacmania(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
+  strip.setBrightness(brightness);
+  
   uint8_t r = random(0x100);
   if ( r < 0x01 ) {
     pacman_rotation = (r % 2) * 5;
@@ -1052,6 +1065,8 @@ uint8_t eyeframe_counter = 0;
 uint8_t eyeblink_frames [3] = {1, 0, 1};
 
 void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
+  strip.setBrightness(brightness);
+  
   uint8_t r = random(25);
   if ( r % 5 ) {
     current_frame = 1;
@@ -1098,6 +1113,8 @@ void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, u
 
 void NeoEffect_loading (uint8_t colorsetnum, Colorsets & colorset, int period)//, uint8_t brightness)
 {
+  strip.setBrightness(brightness);
+  
   uint8_t ON = effect_counterA % loading_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % loading_effect_anim_length;
 
@@ -1128,6 +1145,8 @@ void NeoEffect_loading (uint8_t colorsetnum, Colorsets & colorset, int period)//
 */
 void NeoEffect_stephen (uint8_t colorsetnum, Colorsets & colorset, int period)//, uint8_t brightness)
 {
+  strip.setBrightness(brightness);
+  
   uint8_t firstLEDON = effect_counterA % loading_effect_anim_length;
   uint8_t firstLEDOFF = (effect_counterA - 1) % loading_effect_anim_length;
 
@@ -1171,6 +1190,8 @@ uint32_t rgb2color(uint8_t r, uint8_t g, uint8_t b)
 uint16_t poolofradiance_buffers [NeoLEDs][2][3];
 uint8_t poolofradiance_current_buffer = 0;
 void NeoEffect_poolofradiance (uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
+  strip.setBrightness(brightness);
+  
   uint8_t poolofradiance_other_buffer = poolofradiance_current_buffer ^ 1;
   for (uint8_t i = 0; i < NeoLEDs; i++) {
     for (uint8_t c = 0; c < 3; c++) {
@@ -1206,6 +1227,8 @@ void NeoEffect_poolofradiance (uint8_t colorsetnum, Colorsets & colorset, int pe
 //flash white
 uint32_t NeoEffect_BufferedFlash_buffer [NeoLEDs]; //saves what was there before to fade back to it.
 void NeoEffect_BufferedFlash (uint32_t flashcolor, int period) {
+  strip.setBrightness(brightness);
+  
   for (uint8_t i = 0; i < NeoLEDs; i++) {
     NeoEffect_BufferedFlash_buffer[i] = neo.getcolor(i);
     neo.setcolor_now(i, flashcolor , strip);
@@ -1503,7 +1526,7 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
   switch (current_effect) {
     case 0: NeoEffect_loading (colorsetnum, colorset, 200 ); break;
     case 1: NeoEffect_spider (colorsetnum, colorset, 100, 30 ); break;
-    case 2: NeoEffect_spider2(colorsetnum, colorset, 10, 30 );  break;
+    case 2: NeoEffect_spider2(colorsetnum, colorset, 25, 30 );  break;
     case 3: NeoEffect_cylon  (colorsetnum, colorset, 200, 30 );  break;
     case 4: NeoEffect_cylon2 (colorsetnum, colorset, 200, 30 );  break;
     case 5: NeoEffect_zigzag (colorsetnum, colorset, 350, 30 );  break;
@@ -1572,7 +1595,7 @@ void loop()
     }
   }
   neo.wait(10, strip); //dummy wait to set debuncedButtonState
-
+  //this checks for button presses, they are alllll holds joel!
   if (debouncedButtonHeld) {
     if (debouncedButtonHeld < 1e6 && !RXframe_full) {
       current_gene = (current_gene + 1) % NumGenes;
