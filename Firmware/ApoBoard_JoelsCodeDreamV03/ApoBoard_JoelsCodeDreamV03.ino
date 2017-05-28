@@ -275,7 +275,7 @@ int check_serial_cmd() {
 void serial_cmd_help() {
   Serial.println(F("Serial command help:"));
   Serial.println(F("p : program"));
-  Serial.println(F("r : dump eeprom"));
+  Serial.println(F("r : read genes"));
   Serial.println(F("w : wipe genes (reversible)"));
   Serial.println(F("f : fill ram-genes with all effects"));
   Serial.println(F("b : reboot Arduino"));
@@ -851,7 +851,8 @@ void NeoEffect_pacmania(uint8_t colorsetnum, Colorsets & colorset, int period, u
   effect_counterA ++;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////
+//Effect 11 : eyeblink
 
 #define eyeblinkNumFrames 2
 PROGMEM const uint8_t eyeblink[eyeblinkNumFrames][10]  = {  //memopt
@@ -865,22 +866,24 @@ uint8_t eyeblink_frames [3] = {1, 0, 1};
 void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, uint8_t brightness) {
   strip.setBrightness(brightness);
 
-  uint8_t r = random(10);
+  uint8_t r = random(30);
   if ( r == 0) {
     current_frame = 1;
     eyeframe_counter = 3;
   }
   else if (eyeframe_counter == 0)
-    current_frame = 0;
+    if ( r == 1) {
+      current_frame = 1;
+    }
+    else
+      current_frame = 0;
+  if (r == 2) {
+    FGcounter++;
+    BGcounter++;
+  }
   if (eyeframe_counter) {
     current_frame = eyeblink_frames[eyeframe_counter - 1 ];
     eyeframe_counter--;
-    if (!eyeframe_counter)  {
-      if (r == 0) {
-        FGcounter++;
-        BGcounter++;
-      }
-    }
   }
   for (uint8_t led = 0; led < NeoLEDs; led++) {
     uint8_t pixel = pgm_read_byte(&(eyeblink[current_frame][led]));
