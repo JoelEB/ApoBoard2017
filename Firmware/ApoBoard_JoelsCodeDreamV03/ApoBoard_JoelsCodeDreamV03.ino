@@ -456,6 +456,16 @@ void setup()
   Serial.print(F("NumGenes = "));
   Serial.println(NumGenes);
   Serial.println(F("Starting PROPAGAND-EYE kernel:"));
+
+  //This blinks LED on testbed to visually confirm updlaod success
+  pinMode(A5, OUTPUT);
+  for(int i=0;i<3;i++)
+  {
+    digitalWrite(A5, HIGH);
+    delay(100);  
+    digitalWrite(A5, LOW);
+    delay(100); 
+  }
 }
 
 
