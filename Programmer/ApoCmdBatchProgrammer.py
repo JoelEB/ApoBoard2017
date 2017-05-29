@@ -20,7 +20,7 @@ eeprom_badgeNum    =128 #try to keep badgeNum outside of gene area
 
 class BadgeCmd(cmd.Cmd):
     prompt = '\nApoCmd: '
-    intro =  "ApoBadge2017 auto-programmer.  SPECTER v.5 build5.27.17" 
+    intro =  "ApoBadge2017 auto-programmer.  SPECTER v.5 build5.27.17\nPlease run as 'root' otherwise AVRispMKii may not be detected" 
 
 
     def do_write_gene(self, line):
@@ -359,7 +359,11 @@ def avd_start_interactive():
     p.stdin.write("sig\n") #get device signature
     p.stdout.readline()
     p.stdout.readline()
-    avd_sig_reply = p.stdout.readline().split('=')[1][1:-1]
+    readlinesplit = p.stdout.readline().split('=')
+    if len(readlinesplit) != 2:
+        print("Improper response from avrdude interactive")
+        return False
+    avd_sig_reply = readlinesplit[1][1:-1]
     
 
     if (avd_sig_reply == '0xffffff'):
