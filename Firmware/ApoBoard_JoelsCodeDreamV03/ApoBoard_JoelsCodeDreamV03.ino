@@ -459,12 +459,12 @@ void setup()
 
   //This blinks LED on testbed to visually confirm updlaod success
   pinMode(A5, OUTPUT);
-  for(int i=0;i<3;i++)
+  for (int i = 0; i < 3; i++)
   {
     digitalWrite(A5, HIGH);
-    delay(100);  
+    delay(100);
     digitalWrite(A5, LOW);
-    delay(100); 
+    delay(100);
   }
 }
 
@@ -835,15 +835,15 @@ void NeoEffect_smiley(uint8_t colorsetnum, Colorsets & colorset, int period,  ui
 
 #define pacmanNumFrames 9
 PROGMEM const uint8_t pacmanFaces[pacmanNumFrames][10]  = {  //memopt
-  {1, 1, 1, 1, 2, 1, 1, 1, 1, 1}, // pacman closed mouth
-  {1, 1, 1, 1, 2, 1, 1, 1, 1, 1}, // pacman closed mouth
-  {1, 1, 1, 1, 2, 1, 1, 1, 1, 1}, // pacman closed mouth
-  {1, 1, 1, 1, 2, 1, 1, 0, 0, 1}, // pacman middle mouth
-  {1, 1, 1, 1, 2, 1, 0, 0, 0, 0}, // pacman open mouth
-  {0, 1, 1, 1, 2, 0, 0, 0, 0, 0}, // pacman moar open mouth
-  {0, 1, 1, 1, 2, 0, 0, 0, 0, 0}, // pacman moar open mouth
-  {1, 1, 1, 1, 2, 1, 0, 0, 0, 0}, // pacman open mouth
-  {1, 1, 1, 1, 2, 1, 1, 0, 0, 1}, // pacman middle mouth
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // pacman closed mouth
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // pacman closed mouth
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // pacman closed mouth
+  {1, 1, 1, 1, 1, 1, 1, 0, 0, 1}, // pacman middle mouth
+  {1, 1, 1, 1, 1, 1, 0, 0, 0, 0}, // pacman open mouth
+  {0, 1, 1, 1, 1, 0, 0, 0, 0, 0}, // pacman moar open mouth
+  {0, 1, 1, 1, 1, 0, 0, 0, 0, 0}, // pacman moar open mouth
+  {1, 1, 1, 1, 1, 1, 0, 0, 0, 0}, // pacman open mouth
+  {1, 1, 1, 1, 1, 1, 1, 0, 0, 1}, // pacman middle mouth
 
 };
 uint8_t pacman_rotation = 0;
@@ -912,7 +912,11 @@ void NeoEffect_eyeblink(uint8_t colorsetnum, Colorsets & colorset, int period, u
   for (uint8_t led = 0; led < NeoLEDs; led++) {
     uint8_t pixel = pgm_read_byte(&(eyeblink[current_frame][led]));
     if (pixel) {
-      neo.setcolor_now( led, colorset.getFG(colorsetnum, pixel + current_frame), strip );
+      if (current_frame) {
+        neo.setcolor_now( led, colorset.getBG(colorsetnum), strip );
+      }
+      else
+        neo.setcolor_now( led, colorset.getFG(colorsetnum), strip) ;
     }
     else
       neo.setcolor_now( led , colorset.getBG(0), strip );
@@ -1178,6 +1182,7 @@ void NeoEffect_hypnotoad(uint8_t colorsetnum, Colorsets colorset, int period)
 #define RXframe_len 5
 uint8_t RXframe [RXframe_len];
 bool RXframe_full = false;
+bool RXstart_received = false;
 uint8_t RXframeByte = RXframe_len;
 uint32_t RXframe_valid_until = 0;
 const uint32_t RXframe_valid_timeout = 5000; //5 second time limit on RXframe full
@@ -1185,11 +1190,12 @@ const uint32_t RXframe_valid_timeout = 5000; //5 second time limit on RXframe fu
 
 uint8_t check_IRRX() {
   while (ir.available()) {
-    
+
     uint8_t rx = ir.read();
     Serial.println(rx, HEX);
     if (rx == RXframeStartByte) {
       RXframeByte = 0;
+      RXstart_received = true;
       Serial.println(F("RX frame start"));
     }
     if (RXframeByte < RXframe_len) {
@@ -1212,7 +1218,7 @@ uint8_t check_IRRX() {
           return RXframe[1]; //return command recieved
         }
         else Serial.println(F("BAD CRC"));
-        }
+      }
     }
 
     else if (millis() > RXframe_valid_until) {
@@ -1372,7 +1378,7 @@ void corrupt_gene0() {
 }
 
 void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
-  
+
   switch (current_effect) {
     case 0: NeoEffect_loading (colorsetnum, colorset, 200 ); break;
     case 1: NeoEffect_spider (colorsetnum, colorset, 100, 30 ); break;
@@ -1393,11 +1399,24 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
   }
 }
 
+
+void  do_mating_dance(void) {
+  for (uint8_t mate; mate < 20; mate++) {
+    while (!ir.write_SPECTER(0xFF)) {}
+    for (uint8_t wait; wait < 50; mate++) {
+      neo.wait(10, strip);
+      if (RXstart_received) {
+        
+      }
+    }
+
+}
+}
 //TODO:
 //rainbow color
 //explosion effect
 //ir - done
-//fix brightnesses
+//fix brightnesses - done+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////       //////////////////////////////////////////
@@ -1429,8 +1448,7 @@ void loop()
           RXframe_full = false;
           Serial.print(F("Already have gene:"));
           Serial.println(RXgene, HEX);
-          NeoEffect_BufferedFlash(RED, 500);
-          break;
+          NeoEffect_BufferedFlash(RED, 500);          break;
 
         }
       }
@@ -1474,6 +1492,7 @@ void loop()
       copy_genes_to_EEPROM( all_genes, NumGenes);
       if (NumGenes > MaxGenes) NumGenes = MaxGenes;
       RXframe_full = false;
+      do_mating_dance();
     }
     // if button held for 10 to 30 seconds then set master mode.
     else if (debouncedButtonHeld >= 10e6 && debouncedButtonHeld < 30e6) {
