@@ -466,6 +466,15 @@ void setup()
 ///////////////// E f f e c t s /////////////////////////////
 /////////////////               /////////////////////////////
 /////////////////////////////////////////////////////////////
+/*       5
+      4     6
+   3           7
+   2           8
+      1     9
+         0
+  Propagand-EYE LED numbering.  5 is "top" of badge.
+
+*/
 
 uint8_t effect_counterA = 0; //global effect_counter for all animations
 
@@ -583,8 +592,22 @@ void NeoEffect_spider2(uint8_t colorsetnum, Colorsets & colorset, int period, ui
   FGcounter ++;
   BGcounter ++;
 }
+
+
+/*       5
+      4     6
+   3           7
+   2           8
+      1     9
+         0
+  Propagand-EYE LED numbering.  5 is "top" of badge.
+
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
-PROGMEM const uint8_t cylon_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
+#define cylon_effect_anim_length 12
+
+PROGMEM const uint8_t cylon_effect_anim[cylon_effect_anim_length ][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {2, 3},
   {1, 4},
   {0, 5},
@@ -600,41 +623,32 @@ PROGMEM const uint8_t cylon_effect_anim[][2] = {  //turn on 2 LEDs per frame (pe
 
 };
 
-#define cylon_effect_anim_length 12
-
+//bugfixed by SPECTER 5.27.17.10.18.pm
 void NeoEffect_cylon(uint8_t colorsetnum, Colorsets & colorset, int period,  uint8_t brightness) {
   strip.setBrightness(brightness);
   uint8_t ON = effect_counterA % cylon_effect_anim_length;
   uint8_t OFF = (effect_counterA - 1) % cylon_effect_anim_length;
 
-  if (cylon_effect_anim[ON][0] != 0xFF) {
+  if (pgm_read_byte(&(cylon_effect_anim[ON][0])) != 0xFF) {
     neo.fadeto( pgm_read_byte(&( cylon_effect_anim[ON][0])), colorset.getFG(colorsetnum) , period);
     neo.fadeto( pgm_read_byte(&( cylon_effect_anim[ON][1])), colorset.getFG(colorsetnum) , period);
-    if (cylon_effect_anim[OFF][0] != 0xFF) {
+    if (pgm_read_byte(&(cylon_effect_anim[OFF][0])) != 0xFF) {
       neo.fadeto( pgm_read_byte(&( cylon_effect_anim[OFF][0])), colorset.getBG(colorsetnum) , period);
       neo.fadeto( pgm_read_byte(&( cylon_effect_anim[OFF][1])), colorset.getBG(colorsetnum) , period);
     }
     neo.wait(period, strip);
   }
   else {
-    for (OFF = 0; OFF < NeoLEDs; OFF++) {
+    for (uint8_t OFF = 0; OFF < NeoLEDs; OFF++) {
       neo.fadeto( OFF, colorset.getBG(0), period << 2); //fade in half the time
     }
     neo.wait(period << 2, strip);
-    FGcounter ++;
-    BGcounter ++;
+    FGcounter += random(2);
+    BGcounter += random(2);
   }
   effect_counterA ++;
 }
 ////////////////////////////////////////////////////////////////////////////////
-/*       5
-      4     6
-   3           7
-   2           8
-      1     9
-         0
-
-*/
 PROGMEM const uint8_t cylon2_effect_anim[][2] = {  //turn on 2 LEDs per frame (period), if 0xFF then turn all off (period * 4)
   {2, 3},
   {1, 4},
@@ -1161,42 +1175,39 @@ const uint32_t RXframe_valid_timeout = 5000; //5 second time limit on RXframe fu
 
 uint8_t check_IRRX() {
   while (ir.available()) {
+    
     uint8_t rx = ir.read();
-    //Serial.println(rx, HEX);
-    if (!RXframe_full) {
-      if (rx == RXframeStartByte) {
-        RXframeByte = 0;
-        //Serial.println(F("RX frame start");
-      }
-      if (RXframeByte < RXframe_len) {
-        RXframe[RXframeByte] = rx;
-        RXframeByte ++;
-        //Serial.println(RXframeByte);
-        if (RXframeByte == RXframe_len) {
-          //check for validity
-          if (rx == CRC8(RXframe, RXframe_len - 1)) {
-            /*
-              Serial.print(F("Valid RX:");
-              Serial.print(RXframe[1], HEX);
-              Serial.print(F(",");
-              Serial.print(RXframe[2], HEX);
-              Serial.print(F(",");
-              Serial.println(RXframe[3], HEX);
-            */
-            RXframe_full = true;
-            RXframe_valid_until = millis() + RXframe_valid_timeout;
-            return RXframe[1]; //return command recieved
-          }
-          //else Serial.println(F("BAD CRC");
-        }
-      }
-      else {
-        //Serial.println(F("BadStart");
-      }
+    Serial.println(rx, HEX);
+    if (rx == RXframeStartByte) {
+      RXframeByte = 0;
+      Serial.println(F("RX frame start"));
     }
+    if (RXframeByte < RXframe_len) {
+      RXframe[RXframeByte] = rx;
+      RXframeByte ++;
+      //Serial.println(RXframeByte);
+      if (RXframeByte == RXframe_len) {
+        //check for validity
+        if (rx == CRC8(RXframe, RXframe_len - 1)) {
+          /*
+            Serial.print(F("Valid RX:");
+            Serial.print(RXframe[1], HEX);
+            Serial.print(F(",");
+            Serial.print(RXframe[2], HEX);
+            Serial.print(F(",");
+            Serial.println(RXframe[3], HEX);
+          */
+          RXframe_full = true;
+          RXframe_valid_until = millis() + RXframe_valid_timeout;
+          return RXframe[1]; //return command recieved
+        }
+        else Serial.println(F("BAD CRC"));
+        }
+    }
+
     else if (millis() > RXframe_valid_until) {
       RXframe_full = false;
-      //Serial.println(F("RXframe timed out");
+      Serial.println(F("RXframe timed out"));
     }
   }
   return 0;
@@ -1215,7 +1226,7 @@ void send_IRTXgenetics(uint16_t genes) {
   TXframe[3] = genes & 0xFF;
   for (uint8_t i = 0; i < TXframe_len; i++) {
     while (!ir.write_SPECTER(TXframe[i])) {}
-    neo.wait(1, strip); //byte intergap
+    neo.wait(2, strip); //byte intergap
   }
   while (!ir.write_SPECTER(CRC8(TXframe, TXframe_len))) {}
 }
@@ -1227,7 +1238,7 @@ void send_IRTXsetgenetics(uint16_t genes) {
   TXframe[3] = genes & 0xFF;
   for (uint8_t i = 0; i < TXframe_len; i++) {
     while (!ir.write_SPECTER(TXframe[i])) {}
-    neo.wait(1, strip); //byte intergap
+    neo.wait(2, strip); //byte intergap
   }
   while (!ir.write_SPECTER(CRC8(TXframe, TXframe_len))) {}
 }
@@ -1351,6 +1362,7 @@ void corrupt_gene0() {
 }
 
 void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
+  
   switch (current_effect) {
     case 0: NeoEffect_loading (colorsetnum, colorset, 200 ); break;
     case 1: NeoEffect_spider (colorsetnum, colorset, 100, 30 ); break;
@@ -1378,6 +1390,10 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
 //fix brightnesses
 
 ////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////       //////////////////////////////////////////
+/////////////////////////////// loop  //////////////////////////////////////////
+///////////////////////////////       //////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 uint8_t colorsetnum = 6;
 uint32_t next_TX_millis = 0;
 
@@ -1386,7 +1402,7 @@ void loop()
   if (NumGenes > 0) {
     if (millis() > next_TX_millis) {
       send_IRTXgenetics(all_genes[0]); //gene 0 is the "base" gene  //we could reduce data to save power here
-      next_TX_millis = millis() + 1000 + random(1000);
+      next_TX_millis = millis() + 2000 + random(1000);
     }
     do_effect( (all_genes[current_gene] >> 8), all_genes[current_gene] & 0xFF);
 
@@ -1410,10 +1426,12 @@ void loop()
       }
       if (RXframe_full) {
         NeoEffect_BufferedFlash(BRIGHT_WHITE, 1000);
+        Serial.print(F("I see gene:"));
+        Serial.println(RXgene, HEX);
       }
     }
     else if (rx == IRTXcommand_setgenetics) {
-      NeoEffect_BufferedFlash(RED, 1000);
+      NeoEffect_BufferedFlash(BLUE, 1000);
       NumGenes = 1;
       all_genes[0] = RXgene;
       Serial.print(F("Base gene set to:"));
@@ -1422,7 +1440,7 @@ void loop()
       current_gene = 0;
     }
   }
-  neo.wait(10, strip); //dummy wait to set debuncedButtonState
+  neo.wait(0, strip); //dummy wait to set debuncedButtonState
   //this checks for button presses, they are alllll holds joel!
   if (debouncedButtonHeld) {
     if (debouncedButtonHeld < 1e6 && !RXframe_full) {
@@ -1460,6 +1478,13 @@ void loop()
   int csc_ret = check_serial_cmd();
   if (csc_ret > 0) NumGenes = csc_ret;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////                  ////////////////////////////////////
+////////////////////////// Master Mode Loop ////////////////////////////////////
+//////////////////////////                  ////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 
 bool master_active = true;
 uint8_t current_effect = 0;

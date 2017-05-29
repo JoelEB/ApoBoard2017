@@ -5,7 +5,7 @@
 #include "Arduino.h"
 #include "IRSerial-2014.h"
 
-#define bittime 32
+#define bittime 50
 const uint8_t TX_zerotime = bittime >> 1;
 const uint8_t TX_onetime = bittime * 3;
 const uint8_t TX_gaptime = bittime * 1;
@@ -47,19 +47,6 @@ inline void DebugPulse(uint8_t pin, uint8_t count)
 // Private methods
 //
 
-/* static */
-inline void IRSerial::tunedDelay(uint16_t delay) {
-  uint8_t tmp = 0;
-
-  asm volatile("sbiw    %0, 0x01 \n\t"
-               "ldi %1, 0xFF \n\t"
-               "cpi %A0, 0xFF \n\t"
-               "cpc %B0, %1 \n\t"
-               "brne .-10 \n\t"
-               : "+r" (delay), "+a" (tmp)
-               : "0" (delay)
-              );
-}
 
 // This function sets the current object as the "listening"
 // one and returns true if it replaces another
@@ -103,54 +90,6 @@ void IRSerial::recv()
     ::);
 #endif
 
-  uint8_t d = 0;
-
-  // If RX line is high, then we don't see any start bit
-  // so interrupt is probably not for us
-  uint8_t rxPin = rx_pin_read();
-
-  if (_inverse_logic_rx ? rxPin : !rxPin)
-  {
-    //DBUG Serial.write('.');
-    // Wait approximately 1/2 of a bit width to "center" the sample
-    tunedDelay(_rx_delay_centering);
-
-    // Read each of the 8 bits
-    for (uint8_t i = 0x1; i; i <<= 1)
-    {
-      tunedDelay(_rx_delay_intrabit);  //Totally blocks Timer0 interupt!
-      //DebugPulse(_DEBUG_PIN2, 1);
-      uint8_t noti = ~i;
-      if (rx_pin_read())
-        d |= i;
-      else // else clause added to ensure function timing is ~balanced
-        d &= noti;
-    }
-
-    // skip the stop bit
-    tunedDelay(_rx_delay_stopbit);
-    //DebugPulse(_DEBUG_PIN2, 1);
-
-    if (_inverse_logic_rx)
-      d = ~d;
-    //darknet dbug line. Serial.write(d);
-
-    // if buffer full, set the overflow flag and return
-    if ((_receive_buffer_tail + 1) % _SS_MAX_RX_BUFF != _receive_buffer_head)
-    {
-      // save new data in buffer: tail points to where byte goes
-      _receive_buffer[_receive_buffer_tail] = d; // save new byte
-      _receive_buffer_tail = (_receive_buffer_tail + 1) % _SS_MAX_RX_BUFF;
-    }
-    else
-    {
-#if _DEBUG // for scope: pulse pin as overflow indictator
-      DebugPulse(_DEBUG_PIN1, 1);
-#endif
-      _RX_buffer_overflow = true;
-    }
-  }
-
 #if GCC_VERSION < 40302
   // Work-around for avr-gcc 4.3.0 OSX version bug
   // Restore the registers that the compiler misses
@@ -180,7 +119,7 @@ shift_in = 0,
 shift_count = 0,
 rxdata = 0;
 volatile bool rxdatavalid = false;
-volatile bool TX_pending;
+volatile bool TX_pending = false;
 volatile uint16_t RX_dynabittime;
 
 void IRSerial::recv_SPECTER()
@@ -188,6 +127,7 @@ void IRSerial::recv_SPECTER()
   //uint8_t rx = *_receivePortRegister & _receiveBitMask;
   long now = micros();
   int elapsed = now - recv_last_micros ;
+
   if (TX_pending) {
     shift_count = 0;
     return;
@@ -195,10 +135,13 @@ void IRSerial::recv_SPECTER()
 
   //uint8_t oldSREG = SREG;
   //cli();  // turn off interrupts
+  
   if ((uint8_t) *_receivePortRegister & _receiveBitMask) {
+
     if (shift_count == 0) {
-      if (elapsed > 500) {
-        RX_dynabittime = elapsed >> 1;
+      if (elapsed > bittime * 3) {
+        //RX_dynabittime = elapsed >> 1;
+        RX_dynabittime = (const uint16_t) (1000000 / 38000 * bittime * 4 / 2); //1e6/38e3*50(bittime)*4/2
         shift_in = 0;
         shift_count = 8;
         rxdatavalid = false;
@@ -211,6 +154,7 @@ void IRSerial::recv_SPECTER()
       if (shift_count == 0) {
         rxdata = shift_in;
         rxdatavalid = true;
+        //Serial.println(RX_dynabittime);
         // if buffer full, set the overflow flag and return
         if ((_receive_buffer_tail + 1) % _SS_MAX_RX_BUFF != _receive_buffer_head)
         {
@@ -337,7 +281,6 @@ void IRSerial::begin(long speed)
     *digitalPinToPCICR(_receivePin) |= _BV(digitalPinToPCICRbit(_receivePin));
     *digitalPinToPCMSK(_receivePin) |= _BV(digitalPinToPCMSKbit(_receivePin));
   }
-  tunedDelay(_tx_delay); // if we were low this establishes the end
 
 #if _DEBUG
   pinMode(_DEBUG_PIN1, OUTPUT);
@@ -500,10 +443,10 @@ volatile uint16_t oldTCNT1;
 volatile uint16_t oldOCR1A;
 volatile uint16_t oldICR1;
 volatile uint8_t oldTIMSK1;
-volatile uint8_t out_bittimes [19]; //precalcd by IRSerial::write_SPECTER written backwards
+volatile uint8_t out_bittimes [20]; //precalcd by IRSerial::write_SPECTER written backwards
 volatile uint8_t out_bittime_counter;
 
-
+// SPECTER's IR TRANSMIT interrupt handler - called at 38KHZ.
 
 ISR(TIMER1_COMPB_vect) {
   cli();
