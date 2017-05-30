@@ -19,10 +19,18 @@
 uint8_t brightness = 25; //global brightness
 #define BUTTON_PIN 2
 #define debounce_time 10 // button debounce in ms
+
+#define IRTXcommand_genetics 0x10
+#define IRTXcommand_setgenetics 0x27 //arbitrary id # ;-)
+#define IRTXcommand_mating 0x01
+
 // IR Parameters
 #define IR_RX 8 //was 8
 #define IR_TX 9 //was 9
 #define IR_BAUD 300
+
+
+
 IRSerial ir(IR_RX, IR_TX, false, true);
 
 #define SERIAL_BAUD 115200
@@ -44,7 +52,6 @@ boolean previousButtonState = NOT_PUSHED;
 boolean debouncedButtonState = NOT_PUSHED;
 unsigned long debouncedButtonHeld = 0;
 boolean bounceState = WATCH_BUTTON;
-
 
 class Neo_event {
   public:
@@ -194,6 +201,10 @@ class Neo_event {
               */
               break;
           }
+        }
+        while (ir.neo_global_delay > 0) {
+          delay(1);
+          ir.neo_global_delay --;
         }
         strip.show();
       }
@@ -459,11 +470,14 @@ void setup()
 
   //This blinks LED on testbed to visually confirm updlaod success
   pinMode(A5, OUTPUT);
+  pinMode(A4, OUTPUT);
   for (int i = 0; i < 3; i++)
   {
     digitalWrite(A5, HIGH);
+    digitalWrite(A4, HIGH);
     delay(100);
     digitalWrite(A5, LOW);
+    digitalWrite(A4, LOW);
     delay(100);
   }
 }
@@ -1205,19 +1219,27 @@ uint8_t RXframeByte = RXframe_len;
 uint32_t RXframe_valid_until = 0;
 const uint32_t RXframe_valid_timeout = 5000; //5 second time limit on RXframe full
 #define RXframeStartByte 0xFF
+uint32_t next_TX_millis = 0;
 
 uint8_t check_IRRX() {
   while (ir.available()) {
 
     uint8_t rx = ir.read();
     Serial.println(rx, HEX);
+    if (rx >= 0xF0) {
+      next_TX_millis = millis() + 1000; //push TX away from rx incase we are too syncronized with the sending badge
+    }
     if (rx == RXframeStartByte) {
       RXframeByte = 0;
-      RXstart_received = true;
-      Serial.println(F("RX frame start"));
     }
     if (RXframeByte < RXframe_len) {
       RXframe[RXframeByte] = rx;
+      if (RXframeByte == 1 && rx == IRTXcommand_mating) {
+        RXframe_full = true;
+        RXframeByte = RXframe_len;
+        RXframe_valid_until = millis() + RXframe_valid_timeout;
+        return RXframe[1]; //return mating cmd
+      }
       RXframeByte ++;
       //Serial.println(RXframeByte);
       if (RXframeByte == RXframe_len) {
@@ -1247,8 +1269,6 @@ uint8_t check_IRRX() {
   return 0;
 }
 
-#define IRTXcommand_genetics 0x10
-#define IRTXcommand_setgenetics 0x27 //arbitrary id # ;-)
 
 #define TXframe_len 4
 uint8_t TXframe [TXframe_len];
@@ -1272,7 +1292,7 @@ void send_IRTXsetgenetics(uint16_t genes) {
   TXframe[3] = genes & 0xFF;
   for (uint8_t i = 0; i < TXframe_len; i++) {
     while (!ir.write_SPECTER(TXframe[i])) {}
-    neo.wait(2, strip); //byte intergap
+    //neo.wait(2, strip); //byte intergap
   }
   while (!ir.write_SPECTER(CRC8(TXframe, TXframe_len))) {}
 }
@@ -1427,18 +1447,27 @@ void do_effect(uint8_t current_effect, uint8_t colorsetnum) {
 
 void  do_mating_dance(void) {
   Serial.println("Mating dance start");
-  for (uint8_t mate; mate < 20; mate++) {
+  for (uint8_t mate = 0; mate < 20; mate++) {
     while (!ir.write_SPECTER(0xFF)) {}
-    for (uint8_t wait; wait < 50; mate++) {
-      neo.wait(10, strip);
-      if (RXstart_received) {
-        RXstart_received = false;
-        NeoEffect_BufferedFlash(RED, 500);
-        break;
+    while (!ir.write_SPECTER(0x00)) {}
+    Serial.print("Send 0xFF for mating step #");
+    Serial.println(mate);
 
+    for (uint8_t wait = 0; wait < 50; mate++) {
+      neo.wait(10, strip);
+      while (ir.available()) {
+
+        uint8_t rx = ir.read();
+        Serial.println(rx, HEX);
+        if (rx >= 0xF0) {
+          Serial.print("RXstart ");
+          Serial.println(wait);
+          RXstart_received = false;
+          NeoEffect_BufferedFlash(RED, 500);
+          break;
+        }
       }
     }
-
   }
 }
 //TODO:
@@ -1453,31 +1482,68 @@ void  do_mating_dance(void) {
 ///////////////////////////////       //////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 uint8_t colorsetnum = 6;
-uint32_t next_TX_millis = 0;
+const uint16_t mating_mode_duration = 5000;
+uint32_t mating_mode_endtime = 0;
+uint16_t mating_pulse_time = 0;
+const uint16_t mating_courting_duration = 5000;
+uint32_t mating_courting_endtime = 0;
 
-void loop()
-{
-  if (NumGenes > 0) {
-    if (millis() > next_TX_millis) {
-      send_IRTXgenetics(all_genes[0]); //gene 0 is the "base" gene  //we could reduce data to save power here
-      next_TX_millis = millis() + 2000 + random(1000);
+void loop() {
+  if (millis() >= mating_mode_endtime) {
+    if (NumGenes > 0) {
+      if (millis() > next_TX_millis) {
+        next_TX_millis = millis() + 1000 + random(2000);
+        send_IRTXgenetics(all_genes[0]); //gene 0 is the "base" gene  //we could reduce data to save power here
+
+      }
+      do_effect( (all_genes[current_gene] >> 8), all_genes[current_gene] & 0xFF);
     }
-    do_effect( (all_genes[current_gene] >> 8), all_genes[current_gene] & 0xFF);
+    else {
+      neo.setcolor(0, random(0xFFFFFF)); //random color on led0 == no genes set
+    }
+  }
 
+  if (millis() < mating_courting_endtime) {
+    while (!ir.write_SPECTER(0xFF)) {}
+    while (!ir.write_SPECTER(IRTXcommand_mating)) {}
+    Serial.println("courting");
   }
-  else {
-    neo.setcolor(0, random(0xFFFFFF)); //random color on led0 == no genes set
-  }
+
   uint8_t rx = check_IRRX();
   if (rx) {
     uint16_t RXgene = ((uint16_t)RXframe[2] << 8) | RXframe[3];
-    if (rx == IRTXcommand_genetics) {
+    if (rx == IRTXcommand_mating) {
+      if (millis() > mating_mode_endtime) {
+        Serial.println("Mating mode from partner");
+        mating_mode_endtime = millis() + mating_mode_duration;
+        mating_pulse_time = 500; //the initiallizes the rythm of the coupling
+        mating_courting_endtime = 0;
+
+        while (millis() <= mating_mode_endtime) {
+          if ( rx >= 0xF0 ) { //this is lubricant for smoother intercourse
+            NeoEffect_BufferedFlash(RED, mating_pulse_time);
+            mating_pulse_time -= 50;
+            while (!ir.write_SPECTER(0xFF)) {}
+            while (!ir.write_SPECTER(IRTXcommand_mating)) {}
+            Serial.print("hump ");
+            Serial.println(mating_pulse_time);
+            rx = 0;
+          }
+          if (ir.available()) {
+            rx = ir.read();
+          }
+        }
+      }
+      RXframe_full = false;
+    }
+    else if (rx == IRTXcommand_genetics) {
       for (uint8_t i = 0; i < NumGenes; i++) { //search for duplicate genes
         if (all_genes[i] == RXgene) {
           RXframe_full = false;
           Serial.print(F("Already have gene:"));
           Serial.println(RXgene, HEX);
-          NeoEffect_BufferedFlash(BLUE, 500);          break;
+          NeoEffect_BufferedFlash(RED, 500);
+          break;
 
         }
       }
@@ -1517,7 +1583,9 @@ void loop()
       copy_genes_to_EEPROM( all_genes, NumGenes);
       if (NumGenes > MaxGenes) NumGenes = MaxGenes;
       RXframe_full = false;
-      do_mating_dance();
+      //send mating command:
+      mating_courting_endtime = millis() + mating_courting_duration;
+
     }
     // if button held for 10 to 30 seconds then set master mode.
     else if (debouncedButtonHeld >= 10e6 && debouncedButtonHeld < 30e6) {

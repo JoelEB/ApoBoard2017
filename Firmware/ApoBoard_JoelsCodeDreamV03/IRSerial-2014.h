@@ -91,6 +91,7 @@ class IRSerial : public Stream {
     static inline void tunedDelay(uint16_t delay);
 
   public:
+    volatile uint8_t neo_global_delay;
     bool rxdatavalid;
     uint8_t rxdata;
     // public methods

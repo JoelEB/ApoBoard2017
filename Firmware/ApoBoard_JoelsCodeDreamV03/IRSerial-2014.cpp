@@ -1,4 +1,5 @@
 
+//volatile uint8_t neo_global_delay;
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -135,16 +136,19 @@ void IRSerial::recv_SPECTER()
 
   //uint8_t oldSREG = SREG;
   //cli();  // turn off interrupts
-  
-  if ((uint8_t) *_receivePortRegister & _receiveBitMask) {
 
+  if ((uint8_t) *_receivePortRegister & _receiveBitMask) {
+    //debug pulse
+    PORTC ^=  0x10; //A4
+    
     if (shift_count == 0) {
       if (elapsed > bittime * 3) {
         //RX_dynabittime = elapsed >> 1;
-        RX_dynabittime = (const uint16_t) (1000000 / 38000 * bittime * 4 / 2); //1e6/38e3*50(bittime)*4/2
+        RX_dynabittime = (const uint16_t) (1000000 / 38000 * (bittime - 2 ) * 4 / 2); //1e6/38e3*50(bittime)*4/2
         shift_in = 0;
         shift_count = 8;
         rxdatavalid = false;
+        neo_global_delay ++;
       }
     }
     else {
@@ -174,6 +178,7 @@ void IRSerial::recv_SPECTER()
 
   }
   recv_last_micros = now;
+    
 }
 
 uint8_t IRSerial::rx_pin_read()
