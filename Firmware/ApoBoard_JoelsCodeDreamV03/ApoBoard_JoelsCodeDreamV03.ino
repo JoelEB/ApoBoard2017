@@ -1500,7 +1500,7 @@ void loop() {
   uint8_t rx = check_IRRX();
   if (rx) {
     uint16_t RXgene = ((uint16_t)RXframe[2] << 8) | RXframe[3];
-    if (rx == IRTXcommand_mating) {
+    if (rx == IRTXcommand_mating || random(0x800) == 0) {
       if (millis() > mating_mode_endtime) {
         Serial.println("Mating mode from partner");
         mating_mode_endtime = millis() + mating_mode_duration;
